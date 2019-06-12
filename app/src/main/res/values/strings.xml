@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Pro-Rob Intranet</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- content_main -->
+    <string name="textViewLoginUser">Login</string>
+    <string name="textViewPasswordUser">Hasło</string>
+    <string name="buttonLogIn">Zaloguj</string>
+</resources>
