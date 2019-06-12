@@ -1,5 +1,7 @@
 package com.klakier.ProRobIntranet;
 
+import com.klakier.ProRobIntranet.Response.TokenResponse;
+
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
@@ -13,7 +15,7 @@ public interface ProRobApi {
 
     @FormUrlEncoded
     @POST("login")
-    Call<ResponseBody> login(
+    Call<TokenResponse> login(
             @Field("email") String email,
             @Field("password") String password
     );

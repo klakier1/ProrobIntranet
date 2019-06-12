@@ -9,9 +9,15 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.klakier.ProRobIntranet.Response.StandardResponse;
+import com.klakier.ProRobIntranet.Response.TokenResponse;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -55,6 +61,10 @@ public class SigninFragment extends Fragment {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode==KeyEvent.KEYCODE_ENTER){
                     buttonLogIn.performClick();
+
+                    InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(editTextPasswordUser.getWindowToken(), 0);
+
                     return true;
                 }
 
@@ -67,25 +77,23 @@ public class SigninFragment extends Fragment {
             public void onClick(View v) {
 
                 buttonLogIn.setEnabled(false);
-                Call<ResponseBody> call = RetrofitClient
+                Call<TokenResponse> call = RetrofitClient
                         .getInstance()
                         .getApi()
-                        .login(editTextLoginUser.getText().toString(), editTextPasswordUser.getText().toString());
+                        .login(editTextLoginUser.getText().toString().trim(), editTextPasswordUser.getText().toString().trim());
 
 
-                call.enqueue(new Callback<ResponseBody>() {
+                call.enqueue(new Callback<TokenResponse>() {
                     @Override
-                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
                         try {
                             switch (response.code()) {
                                 case 200: {
-                                    String result = response.body().string();
-                                    Toast.makeText(getActivity(), result, Toast.LENGTH_SHORT).show();
-                                    JSONObject reader = new JSONObject(result);
-                                    String tokenString = reader.getString("token");
+
+                                    Toast.makeText(getActivity(), response.body().getToken(), Toast.LENGTH_SHORT).show();
                                     if(context != null) {
                                         Token token = new Token(context);
-                                        token.setToken(tokenString);
+                                        token.setToken(response.body().getToken());
                                         MainActivity activity = (MainActivity)getActivity();
                                         activity.signIn();
                                     }
@@ -93,13 +101,14 @@ public class SigninFragment extends Fragment {
                                     break;
                                 }
                                 default: {
-                                    Toast.makeText(getActivity(), response.errorBody().string(), Toast.LENGTH_SHORT).show();
+                                    StandardResponse errorResponse = new Gson().fromJson(response.errorBody().string(), StandardResponse.class);
+                                    Toast.makeText(getActivity(), errorResponse.getMessage(), Toast.LENGTH_SHORT).show();
                                     break;
                                 }
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
-                        } catch (JSONException e){
+                        } catch (NullPointerException e) {
                             e.printStackTrace();
                         }finally {
                             buttonLogIn.setEnabled(true);
@@ -107,8 +116,8 @@ public class SigninFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(Call<ResponseBody> call, Throwable t) {
-                        Toast.makeText(getActivity(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                    public void onFailure(Call<TokenResponse> call, Throwable t) {
+                        Toast.makeText(getActivity(), getActivity().getString(R.string.error_retrofit_msg), Toast.LENGTH_LONG).show();
                         buttonLogIn.setEnabled(true);
                     }
                 });

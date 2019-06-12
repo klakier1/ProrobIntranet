@@ -6,4 +6,5 @@
     <string name="textViewLoginUser">Login</string>
     <string name="textViewPasswordUser">Hasło</string>
     <string name="buttonLogIn">Zaloguj</string>
+    <string name="error_retrofit_msg">Serwer nie odpowiada, sprawdź połączenie internetowy i ponów próbe</string>
 </resources>

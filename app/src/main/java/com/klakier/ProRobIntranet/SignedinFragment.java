@@ -134,7 +134,7 @@ public class SignedinFragment extends Fragment {
 
                 @Override
                 public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    Toast.makeText(getActivity(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), getActivity().getString(R.string.error_retrofit_msg), Toast.LENGTH_LONG).show();
                     MainActivity activity = (MainActivity)getActivity();
                     activity.logOut();
 
