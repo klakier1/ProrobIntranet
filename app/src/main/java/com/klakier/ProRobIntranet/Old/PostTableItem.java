@@ -1,4 +1,4 @@
-package com.klakier.ProRobIntranet;
+package com.klakier.ProRobIntranet.Old;
 
 public class PostTableItem
 {

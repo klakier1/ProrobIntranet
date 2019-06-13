@@ -1,8 +1,8 @@
 package com.klakier.ProRobIntranet;
 
 import com.klakier.ProRobIntranet.Response.TokenResponse;
+import com.klakier.ProRobIntranet.Response.UserDataShortResponse;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
@@ -21,7 +21,7 @@ public interface ProRobApi {
     );
 
     @GET("api/user/id/{user_id}")
-    Call<ResponseBody> getUserShort(
+    Call<UserDataShortResponse> getUserShort(
             @Path("user_id") int user,
             @Header("Authorization") String authorization
     );

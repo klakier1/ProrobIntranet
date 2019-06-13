@@ -1,4 +1,4 @@
-package com.klakier.ProRobIntranet;
+package com.klakier.ProRobIntranet.Fragments;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -12,13 +12,17 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.klakier.ProRobIntranet.MainActivity;
+import com.klakier.ProRobIntranet.R;
+import com.klakier.ProRobIntranet.Response.StandardResponse;
+import com.klakier.ProRobIntranet.Response.UserDataShort;
+import com.klakier.ProRobIntranet.Response.UserDataShortResponse;
+import com.klakier.ProRobIntranet.RetrofitClient;
+import com.klakier.ProRobIntranet.Token;
 
 import java.io.IOException;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -58,7 +62,7 @@ public class SignedinFragment extends Fragment {
         buttonLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity activity = (MainActivity)getActivity();
+                MainActivity activity = (MainActivity) getActivity();
                 activity.logOut();
             }
         });
@@ -68,14 +72,13 @@ public class SignedinFragment extends Fragment {
         return v;
     }
 
-    private void prepareInfo(JSONObject jsonObject){
-        try {
-            JSONArray array =  jsonObject.getJSONArray("data");
-            JSONObject item = array.getJSONObject(0);
-            textViewInfo1.setText("Zalogowany jako: " + item.getString("first_name") + " " + item.getString("last_name"));
-            textViewInfo2.setText("Rola: " + item.getString("role"));
-            textViewInfo3.setText("Email: " + item.getString("email"));
-            textViewInfo4.setText("Nr tel: " + item.getString("phone"));
+    private void prepareInfo(UserDataShortResponse response) {
+
+        UserDataShort user = response.getData().get(0);
+        textViewInfo1.setText("Zalogowany jako: " + user.getFirstName() + " " + user.getLastName());
+        textViewInfo2.setText("Rola: " + user.getRole());
+        textViewInfo3.setText("Email: " + user.getEmail());
+        textViewInfo4.setText("Nr tel: " + user.getPhone());
 
 /*            email": "testowy1@pro-rob.pl",
                     "avatar_file_name": null,
@@ -87,11 +90,6 @@ public class SignedinFragment extends Fragment {
                     "last_name": "Jones",
                     "title": "Ścigany",
                     "phone": "+48123456789"*/
-
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
     private void getInfo() {
@@ -99,26 +97,26 @@ public class SignedinFragment extends Fragment {
             Token token = new Token(context);
             int id = token.getId();
 
-            Call<ResponseBody> call = RetrofitClient
+            Call<UserDataShortResponse> call = RetrofitClient
                     .getInstance()
                     .getApi()
                     .getUserShort(id, "Bearer " + token.getToken());
 
-            call.enqueue(new Callback<ResponseBody>() {
+            call.enqueue(new Callback<UserDataShortResponse>() {
                 @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                public void onResponse(Call<UserDataShortResponse> call, Response<UserDataShortResponse> response) {
                     try {
                         switch (response.code()) {
                             case 200: {
-                                String result = response.body().string();
+                                String result = response.body().getMessage();
                                 Toast.makeText(getActivity(), result, Toast.LENGTH_SHORT).show();
-                                JSONObject reader = new JSONObject(result);
-                                prepareInfo(reader);
+                                prepareInfo(response.body());
                                 break;
                             }
                             default: {
-                                Toast.makeText(getActivity(), response.errorBody().string(), Toast.LENGTH_SHORT).show();
-                                MainActivity activity = (MainActivity)getActivity();
+                                StandardResponse errorResponse = new Gson().fromJson(response.errorBody().string(), StandardResponse.class);
+                                Toast.makeText(getActivity(), errorResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                                MainActivity activity = (MainActivity) getActivity();
                                 activity.logOut();
                                 break;
                             }
@@ -127,15 +125,13 @@ public class SignedinFragment extends Fragment {
                         e.printStackTrace();
                     } catch (NullPointerException e) {
                         e.printStackTrace();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
                     }
                 }
 
                 @Override
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                public void onFailure(Call<UserDataShortResponse> call, Throwable t) {
                     Toast.makeText(getActivity(), getActivity().getString(R.string.error_retrofit_msg), Toast.LENGTH_LONG).show();
-                    MainActivity activity = (MainActivity)getActivity();
+                    MainActivity activity = (MainActivity) getActivity();
                     activity.logOut();
 
                 }

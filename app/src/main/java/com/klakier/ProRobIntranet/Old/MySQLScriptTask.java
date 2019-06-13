@@ -1,4 +1,4 @@
-package com.klakier.ProRobIntranet;
+package com.klakier.ProRobIntranet.Old;
 
 import android.content.Context;
 import android.os.AsyncTask;
@@ -30,7 +30,7 @@ public class MySQLScriptTask extends AsyncTask<Void, Void, String> {
 
         try {
 
-            String data = new String();
+            String data = "";
             for(PostTableItem item : postTableItemList)
             {
                 data  += "&" + URLEncoder.encode(item.getKey(), "UTF-8") + "=" +
@@ -59,7 +59,7 @@ public class MySQLScriptTask extends AsyncTask<Void, Void, String> {
 
             return sb.toString();
         } catch (Exception e) {
-            return new String("Exception: " + e.getMessage());
+            return "Exception: " + e.getMessage();
         }
     }
 

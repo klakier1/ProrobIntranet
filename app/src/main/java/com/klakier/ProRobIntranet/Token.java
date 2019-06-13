@@ -4,13 +4,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
 
-import com.google.gson.JsonObject;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
-
+import java.nio.charset.StandardCharsets;
 
 import static android.util.Base64.DEFAULT;
 
@@ -47,12 +44,7 @@ public class Token {
     public String getTokenJson() {
         String[] parts = getToken().split("[.]");
         byte[] data = Base64.decode(parts[1], DEFAULT);
-        try {
-            return new String(data, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return new String(data, StandardCharsets.UTF_8);
     }
 
     public int getId() {

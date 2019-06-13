@@ -1,4 +1,4 @@
-package com.klakier.ProRobIntranet;
+package com.klakier.ProRobIntranet.Fragments;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -15,16 +15,15 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.klakier.ProRobIntranet.MainActivity;
+import com.klakier.ProRobIntranet.R;
 import com.klakier.ProRobIntranet.Response.StandardResponse;
 import com.klakier.ProRobIntranet.Response.TokenResponse;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.klakier.ProRobIntranet.RetrofitClient;
+import com.klakier.ProRobIntranet.Token;
 
 import java.io.IOException;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
