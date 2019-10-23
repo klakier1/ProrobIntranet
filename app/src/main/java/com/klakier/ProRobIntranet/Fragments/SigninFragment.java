@@ -14,36 +14,51 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.klakier.ProRobIntranet.MainActivity;
+import com.klakier.ProRobIntranet.ApiCalls.GetUserShortDataCall;
+import com.klakier.ProRobIntranet.ApiCalls.LoginCall;
+import com.klakier.ProRobIntranet.ApiCalls.OnResponseListener;
+import com.klakier.ProRobIntranet.Database.DBProRob;
 import com.klakier.ProRobIntranet.R;
-import com.klakier.ProRobIntranet.Response.StandardResponse;
-import com.klakier.ProRobIntranet.Response.TokenResponse;
-import com.klakier.ProRobIntranet.RetrofitClient;
+import com.klakier.ProRobIntranet.Responses.StandardResponse;
+import com.klakier.ProRobIntranet.Responses.TokenResponse;
+import com.klakier.ProRobIntranet.Responses.UserDataShort;
+import com.klakier.ProRobIntranet.Responses.UserDataShortResponse;
 import com.klakier.ProRobIntranet.Token;
-
-import java.io.IOException;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class SigninFragment extends Fragment {
 
-    EditText editTextLoginUser;
-    EditText editTextPasswordUser;
-    Button buttonLogIn;
-    Context context;
+    public static final String SIGN_IN_ACTION = "signInAction";
+
+    private EditText editTextLoginUser;
+    private EditText editTextPasswordUser;
+    private Button buttonLogIn;
+    private Context context;
+
+    private OnFragmentInteractionListener mListener;
+
+    // TODO: Rename method, update argument and hook method into UI event
+    public void onAction(String action) {
+        if (mListener != null) {
+            mListener.onFragmentInteraction(action);
+        }
+    }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         this.context = context;
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
+        mListener = null;
         this.context = null;
     }
 
@@ -56,17 +71,16 @@ public class SigninFragment extends Fragment {
         editTextLoginUser = v.findViewById(R.id.editTextLoginUser);
         editTextPasswordUser = v.findViewById(R.id.editTextPasswordUser);
         editTextPasswordUser.setOnKeyListener(new View.OnKeyListener() {
+            //hide keyboard and click button on enter
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode==KeyEvent.KEYCODE_ENTER){
+                if (keyCode == KeyEvent.KEYCODE_ENTER) {
                     buttonLogIn.performClick();
 
                     InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(editTextPasswordUser.getWindowToken(), 0);
-
                     return true;
                 }
-
                 return false;
             }
         });
@@ -75,56 +89,62 @@ public class SigninFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
+                //disable login button
                 buttonLogIn.setEnabled(false);
-                Call<TokenResponse> call = RetrofitClient
-                        .getInstance()
-                        .getApi()
-                        .login(editTextLoginUser.getText().toString().trim(), editTextPasswordUser.getText().toString().trim());
+                //get login and password from editText
+                String userLogin = editTextLoginUser.getText().toString().trim();
+                String userPassword = editTextPasswordUser.getText().toString().trim();
 
-
-                call.enqueue(new Callback<TokenResponse>() {
+                LoginCall loginCall = new LoginCall(context, userLogin, userPassword);
+                loginCall.execute(new OnResponseListener() {
                     @Override
-                    public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
-                        try {
-                            switch (response.code()) {
-                                case 200: {
+                    public void onSuccess(StandardResponse response) {
+                        //cast response to tokenResponse
+                        TokenResponse tokenResponse = (TokenResponse) response;
+                        //get token to preferences
+                        Token token = new Token(context);
+                        token.setToken(tokenResponse.getToken());
 
-                                    Toast.makeText(getActivity(), response.body().getToken(), Toast.LENGTH_SHORT).show();
-                                    if(context != null) {
-                                        Token token = new Token(context);
-                                        token.setToken(response.body().getToken());
-                                        MainActivity activity = (MainActivity)getActivity();
-                                        activity.signIn();
-                                    }
-
-                                    break;
-                                }
-                                default: {
-                                    StandardResponse errorResponse = new Gson().fromJson(response.errorBody().string(), StandardResponse.class);
-                                    Toast.makeText(getActivity(), errorResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                                    break;
-                                }
+                        //get userDara to DB
+                        GetUserShortDataCall getUserShortDataCall = new GetUserShortDataCall(context, token);
+                        getUserShortDataCall.execute(new OnResponseListener() {
+                            @Override
+                            public void onSuccess(StandardResponse response) {
+                                //cast response to userDataShortResponse
+                                UserDataShortResponse userDataShortResponse = (UserDataShortResponse) response;
+                                //get first user, response should have one user anyway
+                                UserDataShort userDataShort = userDataShortResponse.getData().get(0);
+                                //get DB
+                                DBProRob dbProRob = new DBProRob(context, null);
+                                dbProRob.setUser(userDataShort);
+                                //inform mainActivity to change fragment
+                                onAction(SIGN_IN_ACTION);
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (NullPointerException e) {
-                            e.printStackTrace();
-                        }finally {
-                            buttonLogIn.setEnabled(true);
-                        }
+
+                            @Override
+                            public void onFailure(StandardResponse response) {
+                                Toast.makeText(context, response.getMessage(), Toast.LENGTH_LONG).show();
+                                //unset token
+                                new Token(context).resetToken();
+                                //enable login button
+                                buttonLogIn.setEnabled(true);
+                            }
+                        });
+
                     }
 
                     @Override
-                    public void onFailure(Call<TokenResponse> call, Throwable t) {
-                        Toast.makeText(getActivity(), getActivity().getString(R.string.error_retrofit_msg), Toast.LENGTH_LONG).show();
+                    public void onFailure(StandardResponse response) {
+                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_LONG).show();
+                        //enable login button
                         buttonLogIn.setEnabled(true);
                     }
                 });
-
             }
         });
 
         return v;
     }
+
 
 }

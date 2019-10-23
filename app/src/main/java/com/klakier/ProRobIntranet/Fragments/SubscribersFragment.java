@@ -37,7 +37,7 @@ public class SubscribersFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View v = inflater.inflate(R.layout.subscribers_fragment, container);
+        View v = inflater.inflate(R.layout.o_subscribers_fragment, container);
 
         recyclerViewSubscribers = v.findViewById(R.id.recyclerViewSubscribers);
 

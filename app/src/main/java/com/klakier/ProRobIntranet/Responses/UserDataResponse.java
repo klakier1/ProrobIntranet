@@ -1,4 +1,4 @@
-package com.klakier.ProRobIntranet.Response;
+package com.klakier.ProRobIntranet.Responses;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

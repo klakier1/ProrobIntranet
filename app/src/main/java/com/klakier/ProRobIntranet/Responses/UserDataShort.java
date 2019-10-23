@@ -1,4 +1,4 @@
-package com.klakier.ProRobIntranet.Response;
+package com.klakier.ProRobIntranet.Responses;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -10,13 +10,13 @@ public class UserDataShort {
     private String email;
     @SerializedName("avatar_file_name")
     @Expose
-    private Object avatarFileName;
+    private String avatarFileName;
     @SerializedName("avatar_content_type")
     @Expose
-    private Object avatarContentType;
+    private String avatarContentType;
     @SerializedName("avatar_file_size")
     @Expose
-    private Object avatarFileSize;
+    private int avatarFileSize;
     @SerializedName("role")
     @Expose
     private String role;
@@ -56,7 +56,7 @@ public class UserDataShort {
      * @param firstName
      * @param avatarContentType
      */
-    public UserDataShort(String email, Object avatarFileName, Object avatarContentType, Object avatarFileSize, String role, Boolean active, String firstName, String lastName, String title, String phone) {
+    public UserDataShort(String email, String avatarFileName, String avatarContentType, int avatarFileSize, String role, Boolean active, String firstName, String lastName, String title, String phone) {
         super();
         this.email = email;
         this.avatarFileName = avatarFileName;
@@ -82,23 +82,23 @@ public class UserDataShort {
         return avatarFileName;
     }
 
-    public void setAvatarFileName(Object avatarFileName) {
+    public void setAvatarFileName(String avatarFileName) {
         this.avatarFileName = avatarFileName;
     }
 
-    public Object getAvatarContentType() {
+    public String getAvatarContentType() {
         return avatarContentType;
     }
 
-    public void setAvatarContentType(Object avatarContentType) {
+    public void setAvatarContentType(String avatarContentType) {
         this.avatarContentType = avatarContentType;
     }
 
-    public Object getAvatarFileSize() {
+    public int getAvatarFileSize() {
         return avatarFileSize;
     }
 
-    public void setAvatarFileSize(Object avatarFileSize) {
+    public void setAvatarFileSize(int avatarFileSize) {
         this.avatarFileSize = avatarFileSize;
     }
 

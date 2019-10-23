@@ -2,6 +2,7 @@ package com.klakier.ProRobIntranet;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.util.Base64;
 
 import org.json.JSONException;
@@ -41,16 +42,19 @@ public class Token {
         return sharedPref.contains(KEY);
     }
 
-    public String getTokenJson() {
+    public String getTokenPayloadJson() {
         String[] parts = getToken().split("[.]");
         byte[] data = Base64.decode(parts[1], DEFAULT);
-        return new String(data, StandardCharsets.UTF_8);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            return new String(data, StandardCharsets.UTF_8);
+        else
+            return new String(data);
     }
 
     public int getId() {
         int id = 0;
         try {
-            JSONObject jo = new JSONObject(getTokenJson());
+            JSONObject jo = new JSONObject(getTokenPayloadJson());
             id = jo.getInt("id");
         } catch (JSONException e) {
             e.printStackTrace();
@@ -61,7 +65,7 @@ public class Token {
     public String getRole() {
         String role = null;
         try {
-            JSONObject jo = new JSONObject(getTokenJson());
+            JSONObject jo = new JSONObject(getTokenPayloadJson());
             role = jo.getString("role");
         } catch (JSONException e) {
             e.printStackTrace();

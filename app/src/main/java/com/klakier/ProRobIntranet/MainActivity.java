@@ -1,42 +1,85 @@
 package com.klakier.ProRobIntranet;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.transition.TransitionManager;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.klakier.ProRobIntranet.Fragments.SignedinFragment;
+import com.klakier.ProRobIntranet.Database.DBProRob;
+import com.klakier.ProRobIntranet.Fragments.DelegationFragment;
+import com.klakier.ProRobIntranet.Fragments.HolidaysFragment;
+import com.klakier.ProRobIntranet.Fragments.HomeFragment;
+import com.klakier.ProRobIntranet.Fragments.OnFragmentInteractionListener;
 import com.klakier.ProRobIntranet.Fragments.SigninFragment;
-import com.klakier.ProRobIntranet.Fragments.SubscribersFragment;
+import com.klakier.ProRobIntranet.Fragments.TeamFragment;
+import com.klakier.ProRobIntranet.Fragments.WorkingTimeFragment;
+import com.klakier.ProRobIntranet.Responses.UserDataShort;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnFragmentInteractionListener {
 
     private static final String SIGNIN_FRAGMENT_TAG = "signinFragment";
-    private static final String SIGNEDIN_FRAGMENT_TAG = "signedinFragment";
-    private static final String SUBSCRIBERS_FRAGMENT_TAG = "subscribersFragment";
+    private static final String HOME_FRAGMENT_TAG = "homeFragment";
+    private static final String WORKING_TIME_FRAGMENT_TAG = "workingTimeFragment";
+    private static final String DELEGATION_FRAGMENT_TAG = "delegationFragment";
+    private static final String HOLIDAYS_FRAGMENT_TAG = "holidaysFragment";
+    private static final String TEAM_FRAGMENT_TAG = "teamFragment";
     private SigninFragment signinFragment;
-    private SubscribersFragment subscribersFragment;
-    private SignedinFragment signedinFragment;
+    private HomeFragment homeFragment;
 
     private FragmentManager fragmentManager;
-    //private Layout mainContainer;
+    private FloatingActionButton fab;
+    private NavigationView navigationView;
+    private DrawerLayout drawer;
+    private ActionBarDrawerToggle toggle;
+    private Toolbar toolbar;
+    private LinearLayout navigationHeader;
+    private Menu navigationMenu;
+
+    @Override
+    public void onFragmentInteraction(String action) {
+        Toast.makeText(this, "Action: " + action, Toast.LENGTH_SHORT).show();
+        switch (action) {
+            case SigninFragment.SIGN_IN_ACTION: {
+                signIn();
+                break;
+            }
+            case HomeFragment.LOGOUT_ACTION: {
+                logOut();
+                break;
+            }
+            default: {
+                throw new IllegalArgumentException(action);
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        View v = getLayoutInflater().inflate(R.layout.activity_main, null, false);
+        setContentView(v);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
+        findViews();
+
+        setSupportActionBar(toolbar);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -51,12 +94,14 @@ public class MainActivity extends AppCompatActivity {
                 textView.setTextColor(getResources().getColor(R.color.secondaryTextColor));
 
                 snackbar.show();
-
             }
         });
 
-        initVars();
-
+        toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+        navigationView.setNavigationItemSelectedListener(this);
         fragmentManager = getSupportFragmentManager();
 
         if (new Token(this).hasToken()) {
@@ -64,38 +109,91 @@ public class MainActivity extends AppCompatActivity {
         } else {
             logOut();
         }
+    }
 
-/*
-        signinFragment = (SigninFragment) fragmentManager.findFragmentByTag(SIGNIN_FRAGMENT_TAG);
-        if (signinFragment == null) {
-            signinFragment = new SigninFragment();
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    private void findViews() {
+        drawer = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
+
+        navigationHeader = (LinearLayout) LayoutInflater.from(this).inflate(R.layout.nav_header_main, navigationView, false);
+        navigationView.addHeaderView(navigationHeader);
+        navigationMenu = navigationView.getMenu();
+
+        toolbar = findViewById(R.id.toolbar);
+        fab = findViewById(R.id.fab);
+    }
+
+    public void setDrawerEnabled(boolean enabled) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            TransitionManager.beginDelayedTransition(toolbar);
+        }
+        int lockMode = enabled ? DrawerLayout.LOCK_MODE_UNLOCKED :
+                DrawerLayout.LOCK_MODE_LOCKED_CLOSED;
+        drawer.setDrawerLockMode(lockMode);
+        toggle.setDrawerIndicatorEnabled(enabled);
+    }
+
+    private View getToolbarTitle() {
+        int childCount = toolbar.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = toolbar.getChildAt(i);
+            if (child instanceof TextView) {
+                return child;
+            }
         }
 
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.add(R.id.main_container, signinFragment, SIGNIN_FRAGMENT_TAG);
-        fragmentTransaction.commit();
-*/
+        return new View(this);
+    }
 
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
     }
 
     public void signIn() {
         Token token = new Token(this);
-        if (!token.hasToken()) return;
+        DBProRob dbProRob = new DBProRob(this, null);
+        if (!token.hasToken() || !dbProRob.hasUser()) return;
 
-        signedinFragment = (SignedinFragment) fragmentManager.findFragmentByTag(SIGNEDIN_FRAGMENT_TAG);
-        if (signedinFragment == null) {
-            signedinFragment = new SignedinFragment();
+        syncDrawerWithDB();
+        setDrawerEnabled(true);
+
+
+        MenuItem checkedItem = navigationView.getCheckedItem();
+        if (checkedItem != null) {
+            onNavigationItemSelected(checkedItem);
+        } else {
+            MenuItem menuItem = navigationMenu.findItem(R.id.nav_home);
+            menuItem.setChecked(true);
+            changeFragment(HOME_FRAGMENT_TAG, HomeFragment.class);
         }
-
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.main_container, signedinFragment, SIGNEDIN_FRAGMENT_TAG);
-        fragmentTransaction.commit();
-
     }
 
     public void logOut() {
         Token token = new Token(this);
         token.resetToken();
+
+        DBProRob dbProRob = new DBProRob(this, null);
+        dbProRob.resetUser();
+
+        syncDrawerWithDB();
+        setDrawerEnabled(false);
 
         signinFragment = (SigninFragment) fragmentManager.findFragmentByTag(SIGNIN_FRAGMENT_TAG);
         if (signinFragment == null) {
@@ -105,14 +203,6 @@ public class MainActivity extends AppCompatActivity {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.main_container, signinFragment, SIGNIN_FRAGMENT_TAG);
         fragmentTransaction.commit();
-
-    }
-
-
-    private void initVars() {
-
-        //mainContainer = findViewById(R.id.main_container);
-
     }
 
     @Override
@@ -137,9 +227,76 @@ public class MainActivity extends AppCompatActivity {
             else
                 Toast.makeText(this, "Token not set", Toast.LENGTH_LONG).show();
             return true;
+        } else if (id == R.id.action_test) {
+            DBProRob dbProRob = new DBProRob(this, null);
+            UserDataShort user = dbProRob.getUser();
+            if (user != null)
+                Toast.makeText(this, "name: " + user.getFirstName() + " " + user.getLastName(), Toast.LENGTH_LONG).show();
+            else
+                Toast.makeText(this, "User not set", Toast.LENGTH_LONG).show();
+        } else if (id == R.id.action_test1) {
+
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_home) {
+            changeFragment(HOME_FRAGMENT_TAG, HomeFragment.class);
+        } else if (id == R.id.nav_working_time) {
+            changeFragment(WORKING_TIME_FRAGMENT_TAG, WorkingTimeFragment.class);
+        } else if (id == R.id.nav_delegations) {
+            changeFragment(DELEGATION_FRAGMENT_TAG, DelegationFragment.class);
+        } else if (id == R.id.nav_holidays) {
+            changeFragment(HOLIDAYS_FRAGMENT_TAG, HolidaysFragment.class);
+        } else if (id == R.id.nav_team) {
+            changeFragment(TEAM_FRAGMENT_TAG, TeamFragment.class);
+        } else if (id == R.id.nav_logout) {
+            logOut();
+        }
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    public void syncDrawerWithDB() {
+        TextView textViewNavUserEmail = navigationHeader.findViewById(R.id.textViewNavBarUserEmail);
+        TextView textViewNavUserName = navigationHeader.findViewById(R.id.textViewNavBarUserName);
+        ImageView imageViewNavUserAvatar = navigationHeader.findViewById(R.id.imageViewNavBarAvatar);
+
+        DBProRob dbProRob = new DBProRob(this, null);
+
+        if (dbProRob.hasUser()) {
+            UserDataShort user = dbProRob.getUser();
+            textViewNavUserEmail.setText(user.getEmail());
+            String fullName = user.getFirstName() + " " + user.getLastName();
+            textViewNavUserName.setText(fullName);
+        } else {
+            textViewNavUserEmail.setText("");
+            textViewNavUserName.setText("");
+            //imageViewNavUserAvatar.setImageResource(R.drawable.missing);
+        }
+    }
+
+    public void changeFragment(String tag, Class c) {
+        try {
+            Fragment fragment = fragmentManager.findFragmentByTag(tag);
+            if (fragment == null) {
+                fragment = (Fragment) c.newInstance();
+            }
+
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.main_container, fragment, tag);
+            fragmentTransaction.commit();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

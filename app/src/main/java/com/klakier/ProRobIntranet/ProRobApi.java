@@ -1,7 +1,8 @@
 package com.klakier.ProRobIntranet;
 
-import com.klakier.ProRobIntranet.Response.TokenResponse;
-import com.klakier.ProRobIntranet.Response.UserDataShortResponse;
+import com.klakier.ProRobIntranet.Responses.TimesheetResponse;
+import com.klakier.ProRobIntranet.Responses.TokenResponse;
+import com.klakier.ProRobIntranet.Responses.UserDataShortResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Field;
@@ -22,6 +23,12 @@ public interface ProRobApi {
 
     @GET("api/user/id/{user_id}")
     Call<UserDataShortResponse> getUserShort(
+            @Path("user_id") int user,
+            @Header("Authorization") String authorization
+    );
+
+    @GET("api/timesheet/id/{user_id}")
+    Call<TimesheetResponse> getTimesheet(
             @Path("user_id") int user,
             @Header("Authorization") String authorization
     );
