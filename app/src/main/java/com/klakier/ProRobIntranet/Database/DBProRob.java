@@ -6,14 +6,25 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.klakier.ProRobIntranet.Responses.TimesheetRow;
 import com.klakier.ProRobIntranet.Responses.UserDataShort;
+
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DBProRob extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "prorob.db";
 
+    //tables names
     private static final String TABLE_CURRENT_USER = "currentUser";
+    private static final String TABLE_TIMESHEET = "timesheet";
+
+    //column names currentUser
     private static final String COL_ID = "id";
     private static final String COL_EMAIL = "email";
     private static final String COL_AVATAR_FILE_NAME = "avatarFileName";
@@ -26,35 +37,71 @@ public class DBProRob extends SQLiteOpenHelper {
     private static final String COL_TITLE = "title";
     private static final String COL_PHONE = "phone";
 
+    //column names timesheet
+    private static final String COL_ID_LOCAL = "id_local";
+    private static final String COL_ID_EXTERNAL = "id_external";
+    private static final String COL_ID_USER = "id_user";
+    private static final String COL_DATE = "date";
+    private static final String COL_FROM = "from_hour";
+    private static final String COL_TO = "to_hour";
+    private static final String COL_CUSTOMER_BREAK = "customer_break";
+    private static final String COL_STATUTORY_BREAK = "statutory_break";
+    private static final String COL_COMMENTS = "comments";
+    private static final String COL_ID_PROJECT = "id_project";
+    private static final String COL_ID_COMPANY = "id_company";
+    private static final String COL_STATUS = "status";
+    private static final String COL_CREATED_AT = "created_at";
+    private static final String COL_UPDATED_AT = "updated_at";
+
+    private static final String CREATE_USER_TABLE = "CREATE TABLE " + TABLE_CURRENT_USER + "(" +
+            COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE," +
+            COL_EMAIL + " TEXT," +
+            COL_AVATAR_FILE_NAME + " TEXT," +
+            COL_AVATAR_CONTENT_TYPE + " TEXT," +
+            COL_AVATAR_FILE_SIZE + " INTEGER," +
+            COL_ROLE + " TEXT," +
+            COL_ACTIVE + " BOOLEAN," +
+            COL_FIRST_NAME + " TEXT," +
+            COL_LAST_NAME + " TEXT," +
+            COL_TITLE + " TEXT," +
+            COL_PHONE + " TEXT" +
+            ");";
+
+    private static final String CREATE_TIMESHEET_TABLE = "CREATE TABLE " + TABLE_TIMESHEET + "(" +
+            COL_ID_LOCAL + " INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE," +
+            COL_ID_EXTERNAL + " INTEGER," +
+            COL_ID_USER + " INTEGER," +
+            COL_DATE + " TEXT," +
+            COL_FROM + " TEXT," +
+            COL_TO + " TEXT," +
+            COL_CUSTOMER_BREAK + " TEXT," +
+            COL_STATUTORY_BREAK + " TEXT," +
+            COL_COMMENTS + " TEXT," +
+            COL_ID_PROJECT + " INTEGER," +
+            COL_ID_COMPANY + " INTEGER," +
+            COL_STATUS + " BOOLEAN," +
+            COL_CREATED_AT + " TEXT," +
+            COL_UPDATED_AT + " TEXT" +
+            ");";
+
     public DBProRob(Context context, SQLiteDatabase.CursorFactory factory) {
         super(context, DATABASE_NAME, factory, DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String query = "CREATE TABLE " + TABLE_CURRENT_USER + "(" +
-                COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                COL_EMAIL + " TEXT," +
-                COL_AVATAR_FILE_NAME + " TEXT," +
-                COL_AVATAR_CONTENT_TYPE + " TEXT," +
-                COL_AVATAR_FILE_SIZE + " INTEGER," +
-                COL_ROLE + " TEXT," +
-                COL_ACTIVE + " BOOLEAN," +
-                COL_FIRST_NAME + " TEXT," +
-                COL_LAST_NAME + " TEXT," +
-                COL_TITLE + " TEXT," +
-                COL_PHONE + " TEXT" +
-                ");";
-        db.execSQL(query);
+        db.execSQL(CREATE_USER_TABLE);
+        db.execSQL(CREATE_TIMESHEET_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        String query = "DROP TABLE IF EXISTS " + TABLE_CURRENT_USER + ";";
-        db.execSQL(query);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CURRENT_USER + ";");
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TIMESHEET + ";");
         onCreate(db);
     }
 
+    //USER TABLE FUNCTIONS ******************************************
     public void resetUser() {
         SQLiteDatabase db = getWritableDatabase();
         db.delete(TABLE_CURRENT_USER, null, null);
@@ -82,7 +129,6 @@ public class DBProRob extends SQLiteOpenHelper {
                     c.getString(c.getColumnIndex(COL_TITLE)),
                     c.getString(c.getColumnIndex(COL_PHONE))
             );
-
         }
 
         db.close();
@@ -91,6 +137,7 @@ public class DBProRob extends SQLiteOpenHelper {
     }
 
     public void setUser(UserDataShort user) {
+        resetUser();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_EMAIL, user.getEmail());
         contentValues.put(COL_AVATAR_FILE_NAME, user.getAvatarFileSize());
@@ -118,5 +165,71 @@ public class DBProRob extends SQLiteOpenHelper {
         db.close();
         c.close();
         return ret;
+    }
+
+    //TIMESHEET TABLE FUNCTIONS ************************************
+
+    public void writeTimesheet(TimesheetRow tsr) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_ID_EXTERNAL, tsr.getIdExternal());
+        contentValues.put(COL_ID_USER, tsr.getUserId());
+        contentValues.put(COL_DATE, tsr.getDate().toString());
+        contentValues.put(COL_FROM, tsr.getFrom().toString());
+        contentValues.put(COL_TO, tsr.getTo().toString());
+        contentValues.put(COL_CUSTOMER_BREAK, tsr.getCustomerBreak().toString());
+        contentValues.put(COL_STATUTORY_BREAK, tsr.getStatutoryBreak().toString());
+        contentValues.put(COL_COMMENTS, tsr.getComments());
+        contentValues.put(COL_ID_PROJECT, tsr.getProjectId());
+        contentValues.put(COL_ID_COMPANY, tsr.getCompanyId());
+        contentValues.put(COL_STATUS, tsr.getStatus());
+        contentValues.put(COL_CREATED_AT, tsr.getCreatedAt().toString());
+        contentValues.put(COL_UPDATED_AT, tsr.getUpdatedAt().toString());
+
+        SQLiteDatabase db = getWritableDatabase();
+        db.insert(TABLE_TIMESHEET, null, contentValues);
+        db.close();
+    }
+
+    public void writeTimesheet(List<TimesheetRow> ltsr) {
+        for (TimesheetRow tsr : ltsr) {
+            writeTimesheet(tsr);
+        }
+    }
+
+    private TimesheetRow getTimesheetRow(Cursor c) {
+        TimesheetRow tsr = new TimesheetRow(
+                c.getInt(c.getColumnIndex(COL_ID_EXTERNAL)),
+                c.getInt(c.getColumnIndex(COL_ID_USER)),
+                Date.valueOf(c.getString(c.getColumnIndex(COL_DATE))),
+                Time.valueOf(c.getString(c.getColumnIndex(COL_FROM))),
+                Time.valueOf(c.getString(c.getColumnIndex(COL_TO))),
+                Time.valueOf(c.getString(c.getColumnIndex(COL_CUSTOMER_BREAK))),
+                Time.valueOf(c.getString(c.getColumnIndex(COL_STATUTORY_BREAK))),
+                c.getString(c.getColumnIndex(COL_COMMENTS)),
+                c.getInt(c.getColumnIndex(COL_ID_PROJECT)),
+                c.getInt(c.getColumnIndex(COL_ID_COMPANY)),
+                c.getInt(c.getColumnIndex(COL_STATUS)) == 1,
+                Timestamp.valueOf(c.getString(c.getColumnIndex(COL_CREATED_AT))),
+                Timestamp.valueOf(c.getString(c.getColumnIndex(COL_UPDATED_AT)))
+        );
+        tsr.setIdLocal(c.getInt(c.getColumnIndex(COL_ID_LOCAL)));
+        return tsr;
+    }
+
+    public List<TimesheetRow> readTimesheet() {
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_TIMESHEET;
+
+        Cursor c = db.rawQuery(query, null);
+        List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
+
+        while (c.moveToNext()) {
+            ltsr.add(getTimesheetRow(c));
+        }
+
+        db.close();
+        c.close();
+
+        return ltsr;
     }
 }

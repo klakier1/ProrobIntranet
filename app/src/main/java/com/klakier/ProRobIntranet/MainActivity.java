@@ -23,6 +23,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.klakier.ProRobIntranet.ApiCalls.GetTimesheetCall;
+import com.klakier.ProRobIntranet.ApiCalls.OnResponseListener;
 import com.klakier.ProRobIntranet.Database.DBProRob;
 import com.klakier.ProRobIntranet.Fragments.DelegationFragment;
 import com.klakier.ProRobIntranet.Fragments.HolidaysFragment;
@@ -31,9 +33,16 @@ import com.klakier.ProRobIntranet.Fragments.OnFragmentInteractionListener;
 import com.klakier.ProRobIntranet.Fragments.SigninFragment;
 import com.klakier.ProRobIntranet.Fragments.TeamFragment;
 import com.klakier.ProRobIntranet.Fragments.WorkingTimeFragment;
+import com.klakier.ProRobIntranet.Responses.StandardResponse;
+import com.klakier.ProRobIntranet.Responses.TimesheetResponse;
+import com.klakier.ProRobIntranet.Responses.TimesheetRow;
 import com.klakier.ProRobIntranet.Responses.UserDataShort;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnFragmentInteractionListener {
+
+    private static final String CHECKED_DRAWER_ITEM = "checkedDrawerItem";
 
     private static final String SIGNIN_FRAGMENT_TAG = "signinFragment";
     private static final String HOME_FRAGMENT_TAG = "homeFragment";
@@ -52,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Toolbar toolbar;
     private LinearLayout navigationHeader;
     private Menu navigationMenu;
+
+    private int mCheckedItem;
 
     @Override
     public void onFragmentInteraction(String action) {
@@ -102,7 +113,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
+
         fragmentManager = getSupportFragmentManager();
+
+        if (savedInstanceState != null) {
+            mCheckedItem = savedInstanceState.getInt(CHECKED_DRAWER_ITEM, 0);
+        }
 
         if (new Token(this).hasToken()) {
             signIn();
@@ -118,6 +134,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        MenuItem checkedItem = navigationView.getCheckedItem();
+        int checkedItemId = checkedItem.getItemId();
+        outState.putInt(CHECKED_DRAWER_ITEM, checkedItemId);
+
         super.onSaveInstanceState(outState);
     }
 
@@ -169,15 +189,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void signIn() {
         Token token = new Token(this);
         DBProRob dbProRob = new DBProRob(this, null);
-        if (!token.hasToken() || !dbProRob.hasUser()) return;
+        if (!token.hasToken() || !dbProRob.hasUser()) logOut();
 
         syncDrawerWithDB();
         setDrawerEnabled(true);
 
-
-        MenuItem checkedItem = navigationView.getCheckedItem();
-        if (checkedItem != null) {
-            onNavigationItemSelected(checkedItem);
+        if (mCheckedItem != 0) {
+            navigationView.setCheckedItem(mCheckedItem);
         } else {
             MenuItem menuItem = navigationMenu.findItem(R.id.nav_home);
             menuItem.setChecked(true);
@@ -235,7 +253,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             else
                 Toast.makeText(this, "User not set", Toast.LENGTH_LONG).show();
         } else if (id == R.id.action_test1) {
+            GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
+            getTimesheetCall.execute(new OnResponseListener() {
+                @Override
+                public void onSuccess(StandardResponse response) {
+                    TimesheetResponse timesheetResponse = (TimesheetResponse) response;
+                    new DBProRob(getApplicationContext(), null).writeTimesheet(timesheetResponse.getData());
 
+                    List<TimesheetRow> ltsr = new DBProRob(getApplicationContext(), null).readTimesheet();
+
+                    TimesheetRow tsr = ((TimesheetResponse) response).getData().get(0);
+                    Toast.makeText(getApplicationContext(), "czas " + tsr.getCustomerBreak().toString()
+                            + ", data " + tsr.getDate().toString()
+                            + ", timestamp " + tsr.getCreatedAt().toString(), Toast.LENGTH_LONG).show();
+
+                }
+
+                @Override
+                public void onFailure(StandardResponse response) {
+                    Toast.makeText(getApplicationContext(), "call failed", Toast.LENGTH_LONG).show();
+                }
+            });
         }
 
         return super.onOptionsItemSelected(item);

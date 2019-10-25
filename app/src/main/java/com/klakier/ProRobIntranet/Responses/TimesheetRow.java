@@ -11,7 +11,8 @@ public class TimesheetRow {
 
     @SerializedName("id")
     @Expose
-    private Integer id;
+    private Integer idExternal;
+    private Integer idLocal = 0;
     @SerializedName("user_id")
     @Expose
     private Integer userId;
@@ -64,16 +65,16 @@ public class TimesheetRow {
      * @param createdAt
      * @param companyId
      * @param from
-     * @param id
+     * @param idExternal
      * @param to
      * @param projectId
      * @param status
      * @param updatedAt
      */
-    public TimesheetRow(Integer id, Integer userId, Date date, Time from, Time to, Time customerBreak, Time statutoryBreak, String comments, Integer projectId, Integer companyId, Boolean status, Timestamp createdAt,
+    public TimesheetRow(Integer idExternal, Integer userId, Date date, Time from, Time to, Time customerBreak, Time statutoryBreak, String comments, Integer projectId, Integer companyId, Boolean status, Timestamp createdAt,
                         Timestamp updatedAt) {
         super();
-        this.id = id;
+        this.idExternal = idExternal;
         this.userId = userId;
         this.date = date;
         this.from = from;
@@ -88,12 +89,20 @@ public class TimesheetRow {
         this.updatedAt = updatedAt;
     }
 
-    public Integer getId() {
-        return id;
+    public Integer getIdExternal() {
+        return idExternal;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setIdExternal(Integer idExternal) {
+        this.idExternal = idExternal;
+    }
+
+    public Integer getIdLocal() {
+        return idLocal;
+    }
+
+    public void setIdLocal(Integer idLocal) {
+        this.idLocal = idLocal;
     }
 
     public Integer getUserId() {
