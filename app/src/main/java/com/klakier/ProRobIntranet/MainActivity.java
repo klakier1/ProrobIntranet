@@ -2,9 +2,7 @@ package com.klakier.ProRobIntranet;
 
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -54,7 +52,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private HomeFragment homeFragment;
 
     private FragmentManager fragmentManager;
-    private FloatingActionButton fab;
     private NavigationView navigationView;
     private DrawerLayout drawer;
     private ActionBarDrawerToggle toggle;
@@ -91,22 +88,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         findViews();
 
         setSupportActionBar(toolbar);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar snackbar = Snackbar.make(view, "Jeszcze nie wymyśliłem do czego to sie przyda", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null);
 
-                // Change the text message color
-                View mySbView = snackbar.getView();
-                TextView textView = mySbView.findViewById(android.support.design.R.id.snackbar_text);
-
-                // We can apply the property of TextView
-                textView.setTextColor(getResources().getColor(R.color.secondaryTextColor));
-
-                snackbar.show();
-            }
-        });
 
         toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -150,7 +132,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationMenu = navigationView.getMenu();
 
         toolbar = findViewById(R.id.toolbar);
-        fab = findViewById(R.id.fab);
     }
 
     public void setDrawerEnabled(boolean enabled) {

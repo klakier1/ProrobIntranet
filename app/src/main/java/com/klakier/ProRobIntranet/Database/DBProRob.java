@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.klakier.ProRobIntranet.Responses.TimesheetRow;
 import com.klakier.ProRobIntranet.Responses.UserDataShort;
+import com.klakier.ProRobIntranet.Token;
 
 import java.sql.Date;
 import java.sql.Time;
@@ -16,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DBProRob extends SQLiteOpenHelper {
+
+    private Context mContext;
 
     private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "prorob.db";
@@ -86,6 +89,7 @@ public class DBProRob extends SQLiteOpenHelper {
 
     public DBProRob(Context context, SQLiteDatabase.CursorFactory factory) {
         super(context, DATABASE_NAME, factory, DATABASE_VERSION);
+        mContext = context;
     }
 
     @Override
@@ -218,7 +222,7 @@ public class DBProRob extends SQLiteOpenHelper {
 
     public List<TimesheetRow> readTimesheet() {
         SQLiteDatabase db = getReadableDatabase();
-        String query = "SELECT * FROM " + TABLE_TIMESHEET;
+        String query = "SELECT * FROM " + TABLE_TIMESHEET + " WHERE " + COL_ID_USER + "=" + new Token(mContext).getId();
 
         Cursor c = db.rawQuery(query, null);
         List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
