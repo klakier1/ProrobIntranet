@@ -70,8 +70,6 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdap
             textViewCustomerBreak = itemView.findViewById(R.id.textViewCustomerBreak);
             textViewComment = itemView.findViewById(R.id.textViewComment);
             textViewUserID = itemView.findViewById(R.id.textViewUserId);
-
-
         }
     }
 }

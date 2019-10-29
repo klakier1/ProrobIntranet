@@ -31,6 +31,11 @@
     <string name="menu_share">Share</string>
     <string name="menu_send">Send</string>
 
+    <!-- timesheet item menu -->
+    <string name="timesheet_item_action_remove">Usuń</string>
+    <string name="timesheet_item_action_edit">Edycja</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

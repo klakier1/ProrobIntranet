@@ -3,14 +3,13 @@ package com.klakier.ProRobIntranet.Fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.klakier.ProRobIntranet.Database.DBProRob;
 import com.klakier.ProRobIntranet.R;
@@ -39,7 +38,7 @@ public class WorkingTimeFragment extends Fragment {
         //return inflater.inflate(R.layout.fragment_working_time, container, false);
         View view = inflater.inflate(R.layout.fragment_working_time, container, false);
 
-        List<TimesheetRow> ltsr = new DBProRob(context, null).readTimesheet();
+        final List<TimesheetRow> ltsr = new DBProRob(context, null).readTimesheet();
         timeSheetViewAdapter = new TimeSheetViewAdapter(ltsr);
         recyclerView = view.findViewById(R.id.recyclerViewTimesheet);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -49,7 +48,7 @@ public class WorkingTimeFragment extends Fragment {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar snackbar = Snackbar.make(view, "Jeszcze nie wymyśliłem do czego to sie przyda", Snackbar.LENGTH_LONG)
+/*                Snackbar snackbar = Snackbar.make(view, "Jeszcze nie wymyśliłem do czego to sie przyda", Snackbar.LENGTH_LONG)
                         .setAction("Action", null);
 
                 // Change the text message color
@@ -59,7 +58,19 @@ public class WorkingTimeFragment extends Fragment {
                 // We can apply the property of TextView
                 textView.setTextColor(getResources().getColor(R.color.secondaryTextColor));
 
-                snackbar.show();
+                snackbar.show();*/
+
+                TimesheetRowPickerDialogFragment dialog = new TimesheetRowPickerDialogFragment();
+                dialog.setDiaglogResultListener(new TimesheetRowPickerDialogFragment.DialogResultListener() {
+                    @Override
+                    public void onDialogResult(TimesheetRow timesheetRow) {
+                        Log.d("TEST", timesheetRow.getCreatedAt().toString());
+                        new DBProRob(context, null).writeTimesheet(timesheetRow);
+                        ltsr.add(timesheetRow);
+                        timeSheetViewAdapter.notifyItemInserted(ltsr.size());
+                    }
+                });
+                dialog.show(getFragmentManager(), "test");
             }
         });
         return view;
