@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.klakier.ProRobIntranet.MainActivity">
+    tools:context="com.klakier.proRobIntranet.MainActivity">
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
@@ -18,5 +18,11 @@
         android:id="@+id/action_test1"
         android:orderInCategory="102"
         android:title="@string/action_test1"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_test2"
+        android:orderInCategory="103"
+        android:title="@string/action_test2"
         app:showAsAction="never" />
 </menu>

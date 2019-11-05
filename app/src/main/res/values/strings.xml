@@ -2,7 +2,8 @@
     <string name="app_name">Pro-Rob Intranet</string>
     <string name="action_settings">Settings</string>
     <string name="action_test">DB test</string>
-    <string name="action_test1">Timesheet test</string>
+    <string name="action_test1">Get From ExtDB</string>
+    <string name="action_test2">Insert To ExtDB</string>
 
     <!-- content_main -->
     <string name="textViewLoginUser">Login</string>

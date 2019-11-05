@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_menu_home"
+            android:title="@string/menu_home" />
+        <item
+            android:id="@+id/nav_working_time"
+            android:icon="@drawable/ic_menu_time"
+            android:title="@string/menu_working_time" />
+        <item
+            android:id="@+id/nav_delegations"
+            android:icon="@drawable/ic_menu_delegation"
+            android:title="@string/menu_delegations" />
+        <item
+            android:id="@+id/nav_holidays"
+            android:icon="@drawable/ic_menu_holidays"
+            android:title="@string/menu_holidays" />
+        <item
+            android:id="@+id/nav_team"
+            android:icon="@drawable/ic_menu_team"
+            android:title="@string/menu_team" />
+    </group>
+
+
+    <group>
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_menu_logout"
+            android:title="@string/menu_logout" />
+    </group>
+
+</menu>

@@ -20,12 +20,33 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="32dp"
             android:layout_marginRight="32dp"
-            android:text="TextView"
+            android:text="Id:10   IdExt:11   User:12"
             android:textColor="@color/secondaryTextColor"
-            android:textSize="46sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:textSize="26sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textViewUpdatedAt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginRight="32dp"
+            android:text="2019-10-22 21:01:15.417645"
+            android:textColor="@color/secondaryTextColor"
+            app:layout_constraintEnd_toEndOf="@+id/textViewStatutoryBreak"
+            app:layout_constraintTop_toBottomOf="@+id/textViewCreatedAt" />
+
+        <TextView
+            android:id="@+id/textViewCreatedAt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:layout_marginRight="32dp"
+            android:text="2019-10-22 21:01:15.417645"
+            android:textColor="@color/secondaryTextColor"
+            app:layout_constraintEnd_toEndOf="@+id/textViewCompany"
+            app:layout_constraintTop_toBottomOf="@+id/textViewUserId" />
 
         <TextView
             android:id="@+id/textViewDate"
