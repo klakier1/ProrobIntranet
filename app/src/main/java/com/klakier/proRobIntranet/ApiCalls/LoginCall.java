@@ -26,7 +26,7 @@ public class LoginCall implements ApiCall {
         this.password = password;
     }
 
-    public void execute(final OnResponseListener onResponseListener) {
+    public void enqueue(final OnResponseListener onResponseListener) {
 
         Call<TokenResponse> call = RetrofitClient
                 .getInstance()

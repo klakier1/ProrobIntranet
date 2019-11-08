@@ -4,6 +4,8 @@
     <string name="action_test">DB test</string>
     <string name="action_test1">Get From ExtDB</string>
     <string name="action_test2">Insert To ExtDB</string>
+    <string name="action_test3">Delete From ExtDB</string>
+    <string name="action_test4">Check deleted in ExtDB</string>
 
     <!-- content_main -->
     <string name="textViewLoginUser">Login</string>

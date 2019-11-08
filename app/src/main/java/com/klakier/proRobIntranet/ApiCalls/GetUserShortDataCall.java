@@ -25,7 +25,7 @@ public class GetUserShortDataCall implements ApiCall {
         this.token = token;
     }
 
-    public void execute(final OnResponseListener onResponseListener) {
+    public void enqueue(final OnResponseListener onResponseListener) {
 
         int id = token.getId();
 

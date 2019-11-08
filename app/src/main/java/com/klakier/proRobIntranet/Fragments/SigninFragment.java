@@ -96,7 +96,7 @@ public class SigninFragment extends Fragment {
                 String userPassword = editTextPasswordUser.getText().toString().trim();
 
                 LoginCall loginCall = new LoginCall(context, userLogin, userPassword);
-                loginCall.execute(new OnResponseListener() {
+                loginCall.enqueue(new OnResponseListener() {
                     @Override
                     public void onSuccess(StandardResponse response) {
                         //cast response to tokenResponse
@@ -107,7 +107,7 @@ public class SigninFragment extends Fragment {
 
                         //get userDara to DB
                         GetUserShortDataCall getUserShortDataCall = new GetUserShortDataCall(context, token);
-                        getUserShortDataCall.execute(new OnResponseListener() {
+                        getUserShortDataCall.enqueue(new OnResponseListener() {
                             @Override
                             public void onSuccess(StandardResponse response) {
                                 //cast response to userDataShortResponse

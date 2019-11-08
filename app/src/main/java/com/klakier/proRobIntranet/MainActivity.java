@@ -22,6 +22,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.annimon.stream.Stream;
+import com.annimon.stream.function.Predicate;
+import com.klakier.proRobIntranet.ApiCalls.DeleteTimesheetRowCall;
 import com.klakier.proRobIntranet.ApiCalls.GetTimesheetCall;
 import com.klakier.proRobIntranet.ApiCalls.InsertTimesheetRowCall;
 import com.klakier.proRobIntranet.ApiCalls.OnResponseListener;
@@ -221,66 +224,145 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Token token = new Token(this);
-            if (token.hasToken())
-                Toast.makeText(this, "id: " + token.getId() + " role: " + token.getRole(), Toast.LENGTH_LONG).show();
-            else
-                Toast.makeText(this, "Token not set", Toast.LENGTH_LONG).show();
-            return true;
-        } else if (id == R.id.action_test) {
-            DBProRob dbProRob = new DBProRob(this, null);
-            UserDataShort user = dbProRob.getUser();
-            if (user != null)
-                Toast.makeText(this, "name: " + user.getFirstName() + " " + user.getLastName(), Toast.LENGTH_LONG).show();
-            else
-                Toast.makeText(this, "User not set", Toast.LENGTH_LONG).show();
-        } else if (id == R.id.action_test1) {
-            GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
-            getTimesheetCall.execute(new OnResponseListener() {
-                @Override
-                public void onSuccess(StandardResponse response) {
-                    TimesheetResponse timesheetResponse = (TimesheetResponse) response;
-                    List<TimesheetRow> ltsr = timesheetResponse.getData();
-                    DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
-                    List<TimesheetRow> filtredLtsr = dbProRob.filterTimesheetRows(ltsr);
-                    dbProRob.writeTimesheet(filtredLtsr);
-                    Toast.makeText(getApplicationContext(), "zaimportowano z bazy", Toast.LENGTH_SHORT).show();
-                }
+        switch (id) {
+            case R.id.action_settings: {
+                Token token = new Token(this);
+                if (token.hasToken())
+                    Toast.makeText(this, "id: " + token.getId() + " role: " + token.getRole(), Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(this, "Token not set", Toast.LENGTH_LONG).show();
+                return true;
+            }
 
-                @Override
-                public void onFailure(StandardResponse response) {
-                    Toast.makeText(getApplicationContext(), "call failed", Toast.LENGTH_LONG).show();
-                }
-            });
-        } else if (id == R.id.action_test2) {
-            final String TAG_INSERT = "InsertingToExtDB";
-            Log.d(TAG_INSERT, "start inserting");
-            final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
-            List<TimesheetRow> listToSync = dbProRob.readTimesheet(String.valueOf(0), true);
-            for (final TimesheetRow tsr : listToSync) {
-                final InsertTimesheetRowCall insertTimesheetRowCall =
-                        new InsertTimesheetRowCall(
-                                getApplicationContext(),
-                                new Token(getApplicationContext()),
-                                tsr);
-                insertTimesheetRowCall.execute(new OnResponseListener() {
+            case R.id.action_test: {
+                DBProRob dbProRob = new DBProRob(this, null);
+                UserDataShort user = dbProRob.getUser();
+                if (user != null)
+                    Toast.makeText(this, "name: " + user.getFirstName() + " " + user.getLastName(), Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(this, "User not set", Toast.LENGTH_LONG).show();
+                return true;
+            }
+
+            case R.id.action_test1: {
+                GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
+                getTimesheetCall.enqueue(new OnResponseListener() {
                     @Override
                     public void onSuccess(StandardResponse response) {
-                        TimesheetRowInsertedResponse timesheetRowInsertedResponse = (TimesheetRowInsertedResponse) response;
-                        tsr.setIdExternal(timesheetRowInsertedResponse.getId());
-                        dbProRob.updateTimesheetRow(tsr, String.valueOf(tsr.getIdLocal()));
-                        Log.d(TAG_INSERT, "success insert local ID:" + tsr.getIdLocal() + " externarl ID:" + tsr.getIdExternal());
+                        TimesheetResponse timesheetResponse = (TimesheetResponse) response;
+                        List<TimesheetRow> ltsr = timesheetResponse.getData();
+                        DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
+                        List<TimesheetRow> filtredLtsr = dbProRob.filterTimesheetRows(ltsr);
+                        dbProRob.writeTimesheet(filtredLtsr);
+                        Toast.makeText(getApplicationContext(), "zaimportowano z bazy", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onFailure(StandardResponse response) {
-                        Log.d(TAG_INSERT, "failed  insert local ID:" + tsr.getIdLocal() + " " + response.getMessage());
+                        Toast.makeText(getApplicationContext(), "call failed", Toast.LENGTH_LONG).show();
                     }
                 });
+                return true;
             }
-            Log.d(TAG_INSERT, "stop inserting");
+
+            case R.id.action_test2: {
+                final String TAG_INSERT = "InsertingToExtDB";
+                Log.d(TAG_INSERT, "start inserting");
+                final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
+                List<TimesheetRow> listToSync = dbProRob.readTimesheet(String.valueOf(0), true);
+                for (final TimesheetRow tsr : listToSync) {
+                    final InsertTimesheetRowCall insertTimesheetRowCall =
+                            new InsertTimesheetRowCall(
+                                    getApplicationContext(),
+                                    new Token(getApplicationContext()),
+                                    tsr);
+                    insertTimesheetRowCall.enqueue(new OnResponseListener() {
+                        @Override
+                        public void onSuccess(StandardResponse response) {
+                            TimesheetRowInsertedResponse timesheetRowInsertedResponse = (TimesheetRowInsertedResponse) response;
+                            tsr.setIdExternal(timesheetRowInsertedResponse.getId());
+                            dbProRob.updateTimesheetRow(tsr, String.valueOf(tsr.getIdLocal()));
+                            Log.d(TAG_INSERT, "success insert local ID:" + tsr.getIdLocal() + " externarl ID:" + tsr.getIdExternal());
+                        }
+
+                        @Override
+                        public void onFailure(StandardResponse response) {
+                            Log.d(TAG_INSERT, "failed  insert local ID:" + tsr.getIdLocal() + " " + response.getMessage());
+                        }
+                    });
+                }
+                Log.d(TAG_INSERT, "stop inserting");
+                return true;
+            }
+
+            case R.id.action_test3: {
+                final String TAG_DELETE = "DeleteFromExtDB";
+                Log.d(TAG_DELETE, "start deleting");
+                final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
+                List<TimesheetRow> listToDel = dbProRob.readTimesheetMarkedDelete();
+                for (final TimesheetRow tsr : listToDel) {
+                    DeleteTimesheetRowCall deleteTimesheetRowCall =
+                            new DeleteTimesheetRowCall(
+                                    getApplicationContext(),
+                                    new Token(getApplicationContext()),
+                                    tsr.getIdExternal() * -1
+                            );
+                    deleteTimesheetRowCall.enqueue(new OnResponseListener() {
+                        @Override
+                        public void onSuccess(StandardResponse response) {
+                            dbProRob.deleteTimesheetRows(new String[]{String.valueOf(tsr.getIdLocal())});
+                            Log.d(TAG_DELETE, "success delete local ID:" + tsr.getIdLocal() + " externarl ID:" + tsr.getIdExternal());
+                        }
+
+                        @Override
+                        public void onFailure(StandardResponse response) {
+                            Log.d(TAG_DELETE, "!failed delete local ID:" + tsr.getIdLocal() + " externarl ID:" + tsr.getIdExternal()
+                                    + " error:" + response.getError().toString() + " message:" + response.getMessage());
+                        }
+                    });
+                }
+                Log.d(TAG_DELETE, "stop deleting");
+                return true;
+            }
+
+            case R.id.action_test4: {
+                final String TAG_DELETE = "DeleteFromExtDB";
+                Log.d(TAG_DELETE, "start deleting from locDB");
+                final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
+                GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
+                getTimesheetCall.enqueue(new OnResponseListener() {
+                    @Override
+                    public void onSuccess(StandardResponse response) {
+                        TimesheetResponse timesheetResponse = (TimesheetResponse) response;
+                        List<TimesheetRow> tsrExtDb = timesheetResponse.getData();
+                        List<TimesheetRow> tsrLocDb = dbProRob.readTimesheet();
+                        final Stream<TimesheetRow> sTsrExt = Stream.of(tsrExtDb);
+                        final Stream<TimesheetRow> sTsrLoc = Stream.of(tsrLocDb);
+
+                        Predicate<TimesheetRow> predicateNotInExtDb = new Predicate<TimesheetRow>() {
+                            @Override
+                            public boolean test(final TimesheetRow s) {
+                                return !sTsrExt.anyMatch(new Predicate<TimesheetRow>() {
+                                    @Override
+                                    public boolean test(TimesheetRow t) {
+                                        return s.getIdExternal().equals(t.getIdExternal());
+                                    }
+                                });
+                            }
+                        };
+
+                        List<TimesheetRow> notInExtDb = sTsrLoc.filter(predicateNotInExtDb).toList();
+
+                    }
+
+                    @Override
+                    public void onFailure(StandardResponse response) {
+                        Log.d(TAG_DELETE, "failed to get timesheet,"
+                                + " error:" + response.getError().toString() + " message:" + response.getMessage());
+                    }
+
+                });
+            }
         }
 
         return super.onOptionsItemSelected(item);

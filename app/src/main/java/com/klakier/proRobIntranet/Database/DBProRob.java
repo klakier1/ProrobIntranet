@@ -276,6 +276,25 @@ public class DBProRob extends SQLiteOpenHelper {
         return ltsr;
     }
 
+    public List<TimesheetRow> readTimesheetMarkedDelete() {
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_TIMESHEET + " WHERE "
+                + COL_ID_USER + "=" + new Token(mContext).getId() + " AND "
+                + COL_ID_EXTERNAL + "<0";
+
+        Cursor c = db.rawQuery(query, null);
+        List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
+
+        while (c.moveToNext()) {
+            ltsr.add(getTimesheetRow(c));
+        }
+
+        db.close();
+        c.close();
+
+        return ltsr;
+    }
+
     public boolean hasTimeSheetRowFromExternalDb(String idExternal) {
         SQLiteDatabase db = getReadableDatabase();
         String query = "SELECT * FROM " + TABLE_TIMESHEET + " WHERE "

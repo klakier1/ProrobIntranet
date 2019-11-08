@@ -18,37 +18,37 @@ import retrofit2.Response;
 
 public class InsertTimesheetRowCall implements ApiCall {
 
-    Context context;
-    TimesheetRow tsr;
-    Token token;
+    Context mContext;
+    TimesheetRow mTsr;
+    Token mToken;
+    Call<TimesheetRowInsertedResponse> mCall;
 
     public InsertTimesheetRowCall(Context context, Token token, TimesheetRow timesheetRow) {
-        this.context = context;
-        this.tsr = timesheetRow;
-        this.token = token;
-    }
+        this.mContext = context;
+        this.mTsr = timesheetRow;
+        this.mToken = token;
 
-    public void execute(final OnResponseListener onResponseListener) {
-
-        Call<TimesheetRowInsertedResponse> call = RetrofitClient
+        mCall = RetrofitClient
                 .getInstance()
                 .getApi()
                 .insertTimesheetRow(
-                        tsr.getUserId(),
-                        tsr.getDate(),
-                        tsr.getFrom(),
-                        tsr.getTo(),
-                        tsr.getCustomerBreak(),
-                        tsr.getStatutoryBreak(),
-                        tsr.getComments(),
-                        tsr.getProjectId(),
-                        tsr.getCompanyId(),
-                        tsr.getStatus(),
-                        tsr.getCreatedAt(),
-                        tsr.getUpdatedAt(),
-                        "Bearer " + token.getToken());
+                        mTsr.getUserId(),
+                        mTsr.getDate(),
+                        mTsr.getFrom(),
+                        mTsr.getTo(),
+                        mTsr.getCustomerBreak(),
+                        mTsr.getStatutoryBreak(),
+                        mTsr.getComments(),
+                        mTsr.getProjectId(),
+                        mTsr.getCompanyId(),
+                        mTsr.getStatus(),
+                        mTsr.getCreatedAt(),
+                        mTsr.getUpdatedAt(),
+                        "Bearer " + mToken.getToken());
+    }
 
-        call.enqueue(new Callback<TimesheetRowInsertedResponse>() {
+    public void enqueue(final OnResponseListener onResponseListener) {
+        mCall.enqueue(new Callback<TimesheetRowInsertedResponse>() {
             @Override
             public void onResponse(Call<TimesheetRowInsertedResponse> call, Response<TimesheetRowInsertedResponse> response) {
                 try {
@@ -74,7 +74,7 @@ public class InsertTimesheetRowCall implements ApiCall {
 
             @Override
             public void onFailure(Call<TimesheetRowInsertedResponse> call, Throwable t) {
-                onResponseListener.onFailure(new StandardResponse(true, context.getString(R.string.error_retrofit_msg)));
+                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.error_retrofit_msg)));
             }
         });
     }
