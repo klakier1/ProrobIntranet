@@ -42,6 +42,7 @@ import com.klakier.proRobIntranet.Responses.TimesheetRow;
 import com.klakier.proRobIntranet.Responses.TimesheetRowInsertedResponse;
 import com.klakier.proRobIntranet.Responses.UserDataShort;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnFragmentInteractionListener {
@@ -326,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             case R.id.action_test4: {
-                final String TAG_DELETE = "DeleteFromExtDB";
+                final String TAG_DELETE = "DeleteFromLocDB";
                 Log.d(TAG_DELETE, "start deleting from locDB");
                 final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
                 GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
@@ -345,14 +346,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 return !sTsrExt.anyMatch(new Predicate<TimesheetRow>() {
                                     @Override
                                     public boolean test(TimesheetRow t) {
-                                        return s.getIdExternal().equals(t.getIdExternal());
+                                        return s.getIdExternal() == t.getIdExternal();
                                     }
                                 });
                             }
                         };
 
+                        Predicate<TimesheetRow> predicateNotInExttDb = new Predicate<TimesheetRow>() {
+                            @Override
+                            public boolean test(final TimesheetRow s) {
+                                return !sTsrExt.anyMatch(new Predicate<TimesheetRow>() {
+                                    @Override
+                                    public boolean test(TimesheetRow t) {
+                                        // System.out.println(s.getIdExternal() + " " + t.getIdExternal());
+                                        return s.getIdExternal() == t.getIdExternal();
+                                    }
+                                });
+                            }
+                        };
+
+
                         List<TimesheetRow> notInExtDb = sTsrLoc.filter(predicateNotInExtDb).toList();
 
+                        List<String> toDeleteFromLocDb = new ArrayList<>();
+                        for (TimesheetRow tsr : notInExtDb) {
+                            toDeleteFromLocDb.add(tsr.getIdLocal().toString());
+                            Log.d(TAG_DELETE, "Timesheet row local id:" + tsr.getIdLocal() + " will be deleted");
+                        }
+                        //int deletedSize = dbProRob.deleteTimesheetRows((String[])toDeleteFromLocDb.toArray());
+                        //Log.d(TAG_DELETE, "on list was:" + toDeleteFromLocDb.size() + " and " + deletedSize + " is deleted " );
                     }
 
                     @Override
