@@ -373,7 +373,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             toDeleteFromLocDb.add(tsr.getIdLocal().toString());
                             Log.d(TAG_DELETE, "Timesheet row local id:" + tsr.getIdLocal() + " will be deleted");
                         }
-                        //int deletedSize = dbProRob.deleteTimesheetRows((String[])toDeleteFromLocDb.toArray());
                         //Log.d(TAG_DELETE, "on list was:" + toDeleteFromLocDb.size() + " and " + deletedSize + " is deleted " );
                     }
 
