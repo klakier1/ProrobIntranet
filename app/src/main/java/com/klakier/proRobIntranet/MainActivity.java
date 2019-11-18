@@ -335,15 +335,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onSuccess(StandardResponse response) {
                         TimesheetResponse timesheetResponse = (TimesheetResponse) response;
-                        List<TimesheetRow> tsrExtDb = timesheetResponse.getData();
+                        final List<TimesheetRow> tsrExtDb = timesheetResponse.getData();
                         List<TimesheetRow> tsrLocDb = dbProRob.readTimesheet();
-                        final Stream<TimesheetRow> sTsrExt = Stream.of(tsrExtDb);
-                        final Stream<TimesheetRow> sTsrLoc = Stream.of(tsrLocDb);
+                        //final Stream<TimesheetRow> sTsrExt = Stream.of(tsrExtDb);
+                        //final Stream<TimesheetRow> sTsrLoc = Stream.of(tsrLocDb);
 
                         Predicate<TimesheetRow> predicateNotInExtDb = new Predicate<TimesheetRow>() {
                             @Override
                             public boolean test(final TimesheetRow s) {
-                                return !sTsrExt.anyMatch(new Predicate<TimesheetRow>() {
+                                return !Stream.of(tsrExtDb).anyMatch(new Predicate<TimesheetRow>() {
                                     @Override
                                     public boolean test(TimesheetRow t) {
                                         return s.getIdExternal() == t.getIdExternal();
@@ -352,21 +352,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             }
                         };
 
-                        Predicate<TimesheetRow> predicateNotInExttDb = new Predicate<TimesheetRow>() {
-                            @Override
-                            public boolean test(final TimesheetRow s) {
-                                return !sTsrExt.anyMatch(new Predicate<TimesheetRow>() {
-                                    @Override
-                                    public boolean test(TimesheetRow t) {
-                                        // System.out.println(s.getIdExternal() + " " + t.getIdExternal());
-                                        return s.getIdExternal() == t.getIdExternal();
-                                    }
-                                });
-                            }
-                        };
-
-
-                        List<TimesheetRow> notInExtDb = sTsrLoc.filter(predicateNotInExtDb).toList();
+                        List<TimesheetRow> notInExtDb = Stream.of(tsrLocDb).filter(predicateNotInExtDb).toList();
 
                         List<String> toDeleteFromLocDb = new ArrayList<>();
                         for (TimesheetRow tsr : notInExtDb) {
