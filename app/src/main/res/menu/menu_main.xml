@@ -37,4 +37,10 @@
         android:orderInCategory="105"
         android:title="@string/action_test4"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_test5"
+        android:orderInCategory="106"
+        android:title="@string/action_test5"
+        app:showAsAction="never" />
 </menu>

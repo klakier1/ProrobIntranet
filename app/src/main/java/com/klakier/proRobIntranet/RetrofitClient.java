@@ -2,9 +2,10 @@ package com.klakier.proRobIntranet;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.klakier.proRobIntranet.Responses.Deserializers.DateDeserializer;
-import com.klakier.proRobIntranet.Responses.Deserializers.TimeDeserializer;
-import com.klakier.proRobIntranet.Responses.Deserializers.TimestampDeserializer;
+import com.klakier.proRobIntranet.api.ProRobApi;
+import com.klakier.proRobIntranet.api.response.deserializer.DateDeserializer;
+import com.klakier.proRobIntranet.api.response.deserializer.TimeDeserializer;
+import com.klakier.proRobIntranet.api.response.deserializer.TimestampDeserializer;
 
 import java.sql.Date;
 import java.sql.Time;

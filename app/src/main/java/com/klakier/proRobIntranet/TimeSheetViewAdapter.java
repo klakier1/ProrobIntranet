@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.klakier.proRobIntranet.Responses.TimesheetRow;
+import com.klakier.proRobIntranet.api.response.TimesheetRow;
 
 import java.util.List;
 

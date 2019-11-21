@@ -23,26 +23,26 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.annimon.stream.Stream;
+import com.annimon.stream.function.Consumer;
 import com.annimon.stream.function.Predicate;
-import com.klakier.proRobIntranet.ApiCalls.DeleteTimesheetRowCall;
-import com.klakier.proRobIntranet.ApiCalls.GetTimesheetCall;
-import com.klakier.proRobIntranet.ApiCalls.InsertTimesheetRowCall;
-import com.klakier.proRobIntranet.ApiCalls.OnResponseListener;
-import com.klakier.proRobIntranet.Database.DBProRob;
-import com.klakier.proRobIntranet.Fragments.DelegationFragment;
-import com.klakier.proRobIntranet.Fragments.HolidaysFragment;
-import com.klakier.proRobIntranet.Fragments.HomeFragment;
-import com.klakier.proRobIntranet.Fragments.OnFragmentInteractionListener;
-import com.klakier.proRobIntranet.Fragments.SigninFragment;
-import com.klakier.proRobIntranet.Fragments.TeamFragment;
-import com.klakier.proRobIntranet.Fragments.WorkingTimeFragment;
-import com.klakier.proRobIntranet.Responses.StandardResponse;
-import com.klakier.proRobIntranet.Responses.TimesheetResponse;
-import com.klakier.proRobIntranet.Responses.TimesheetRow;
-import com.klakier.proRobIntranet.Responses.TimesheetRowInsertedResponse;
-import com.klakier.proRobIntranet.Responses.UserDataShort;
+import com.klakier.proRobIntranet.api.call.DeleteTimesheetRowCall;
+import com.klakier.proRobIntranet.api.call.GetTimesheetCall;
+import com.klakier.proRobIntranet.api.call.InsertTimesheetRowCall;
+import com.klakier.proRobIntranet.api.call.OnResponseListener;
+import com.klakier.proRobIntranet.api.response.StandardResponse;
+import com.klakier.proRobIntranet.api.response.TimesheetResponse;
+import com.klakier.proRobIntranet.api.response.TimesheetRow;
+import com.klakier.proRobIntranet.api.response.TimesheetRowInsertedResponse;
+import com.klakier.proRobIntranet.api.response.UserDataShort;
+import com.klakier.proRobIntranet.database.DBProRob;
+import com.klakier.proRobIntranet.fragments.DelegationFragment;
+import com.klakier.proRobIntranet.fragments.HolidaysFragment;
+import com.klakier.proRobIntranet.fragments.HomeFragment;
+import com.klakier.proRobIntranet.fragments.OnFragmentInteractionListener;
+import com.klakier.proRobIntranet.fragments.SigninFragment;
+import com.klakier.proRobIntranet.fragments.TeamFragment;
+import com.klakier.proRobIntranet.fragments.WorkingTimeFragment;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnFragmentInteractionListener {
@@ -311,7 +311,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     deleteTimesheetRowCall.enqueue(new OnResponseListener() {
                         @Override
                         public void onSuccess(StandardResponse response) {
-                            dbProRob.deleteTimesheetRows(new String[]{String.valueOf(tsr.getIdLocal())});
+                            dbProRob.deleteTimesheetRow(tsr.getIdLocal());
                             Log.d(TAG_DELETE, "success delete local ID:" + tsr.getIdLocal() + " externarl ID:" + tsr.getIdExternal());
                         }
 
@@ -335,10 +335,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onSuccess(StandardResponse response) {
                         TimesheetResponse timesheetResponse = (TimesheetResponse) response;
+
                         final List<TimesheetRow> tsrExtDb = timesheetResponse.getData();
-                        List<TimesheetRow> tsrLocDb = dbProRob.readTimesheet();
-                        //final Stream<TimesheetRow> sTsrExt = Stream.of(tsrExtDb);
-                        //final Stream<TimesheetRow> sTsrLoc = Stream.of(tsrLocDb);
+                        final List<TimesheetRow> tsrLocDb = dbProRob.readTimesheet();
 
                         Predicate<TimesheetRow> predicateNotInExtDb = new Predicate<TimesheetRow>() {
                             @Override
@@ -346,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 return !Stream.of(tsrExtDb).anyMatch(new Predicate<TimesheetRow>() {
                                     @Override
                                     public boolean test(TimesheetRow t) {
-                                        return s.getIdExternal() == t.getIdExternal();
+                                        return s.getIdExternal().equals(t.getIdExternal());
                                     }
                                 });
                             }
@@ -354,12 +353,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         List<TimesheetRow> notInExtDb = Stream.of(tsrLocDb).filter(predicateNotInExtDb).toList();
 
-                        List<String> toDeleteFromLocDb = new ArrayList<>();
-                        for (TimesheetRow tsr : notInExtDb) {
-                            toDeleteFromLocDb.add(tsr.getIdLocal().toString());
-                            Log.d(TAG_DELETE, "Timesheet row local id:" + tsr.getIdLocal() + " will be deleted");
-                        }
-                        //Log.d(TAG_DELETE, "on list was:" + toDeleteFromLocDb.size() + " and " + deletedSize + " is deleted " );
+                        Stream.of(notInExtDb).forEach(new Consumer<TimesheetRow>() {
+                            @Override
+                            public void accept(TimesheetRow q) {
+                                Log.d(TAG_DELETE, "Timesheet row local id:" + q.getIdLocal() + " will be deleted");
+                            }
+                        });
+
+                        int deletedSize = dbProRob.deleteTimesheetRows(notInExtDb);
+                        Log.d(TAG_DELETE, "on list was:" + notInExtDb.size() + " and " + deletedSize + " is deleted ");
                     }
 
                     @Override
@@ -369,6 +371,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                 });
+            }
+            case R.id.action_test5: {
+
+                break;
             }
         }
 
