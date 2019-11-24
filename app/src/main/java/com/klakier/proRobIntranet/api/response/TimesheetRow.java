@@ -205,4 +205,42 @@ public class TimesheetRow implements Cloneable {
             CloneNotSupportedException {
         return super.clone();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TimesheetRow that = (TimesheetRow) o;
+
+        if (!userId.equals(that.userId)) return false;
+        if (!date.equals(that.date)) return false;
+        if (!from.equals(that.from)) return false;
+        if (!to.equals(that.to)) return false;
+        if (!customerBreak.equals(that.customerBreak)) return false;
+        if (!statutoryBreak.equals(that.statutoryBreak)) return false;
+        if (!comments.equals(that.comments)) return false;
+        if (!projectId.equals(that.projectId)) return false;
+        if (!companyId.equals(that.companyId)) return false;
+        if (!status.equals(that.status)) return false;
+        if (!createdAt.equals(that.createdAt)) return false;
+        return updatedAt.equals(that.updatedAt);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = userId.hashCode();
+        result = 31 * result + date.hashCode();
+        result = 31 * result + from.hashCode();
+        result = 31 * result + to.hashCode();
+        result = 31 * result + customerBreak.hashCode();
+        result = 31 * result + statutoryBreak.hashCode();
+        result = 31 * result + comments.hashCode();
+        result = 31 * result + projectId.hashCode();
+        result = 31 * result + companyId.hashCode();
+        result = 31 * result + status.hashCode();
+        result = 31 * result + createdAt.hashCode();
+        result = 31 * result + updatedAt.hashCode();
+        return result;
+    }
 }

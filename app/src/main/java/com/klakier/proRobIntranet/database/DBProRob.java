@@ -360,15 +360,15 @@ public class DBProRob extends SQLiteOpenHelper {
     }
 
     public List<TimesheetRow> filterTimesheetRows(List<TimesheetRow> ltsr) {
-        List<TimesheetRow> filtred = new ArrayList<TimesheetRow>();
+        List<TimesheetRow> filtered = new ArrayList<TimesheetRow>();
         int idExt;
         for (TimesheetRow tsr : ltsr) {
             idExt = tsr.getIdExternal();
             if (!hasTimeSheetRowFromExternalDb(String.valueOf(idExt)) && !hasTimeSheetRowFromExternalDb(String.valueOf(-1 * idExt))) {
-                filtred.add(tsr);
+                filtered.add(tsr);
             }
         }
-        return filtred;
+        return filtered;
     }
 
 

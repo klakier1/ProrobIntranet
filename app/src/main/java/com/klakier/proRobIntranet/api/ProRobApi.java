@@ -17,6 +17,7 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
 public interface ProRobApi {
@@ -61,6 +62,22 @@ public interface ProRobApi {
     @DELETE("api/timesheet/id/{id}")
     Call<StandardResponse> deleteTimesheetRow(
             @Path("id") int id,
+            @Header("Authorization") String authorization
+    );
+
+    @FormUrlEncoded
+    @PUT("api/timesheet")
+    Call<StandardResponse> updateTimesheet(
+            @Field("id") int id,
+            @Field("date") Date date,
+            @Field("from") Time from,
+            @Field("to") Time to,
+            @Field("customer_break") Time customer_break,
+            @Field("statutory_break") Time statutory_break,
+            @Field("comments") String comments,
+            @Field("project_id") int project_id,
+            @Field("company_id") int company_id,
+            @Field("updated_at") Timestamp updated_at,
             @Header("Authorization") String authorization
     );
 }

@@ -29,6 +29,7 @@ import com.klakier.proRobIntranet.api.call.DeleteTimesheetRowCall;
 import com.klakier.proRobIntranet.api.call.GetTimesheetCall;
 import com.klakier.proRobIntranet.api.call.InsertTimesheetRowCall;
 import com.klakier.proRobIntranet.api.call.OnResponseListener;
+import com.klakier.proRobIntranet.api.call.UpdateTimesheetCall;
 import com.klakier.proRobIntranet.api.response.StandardResponse;
 import com.klakier.proRobIntranet.api.response.TimesheetResponse;
 import com.klakier.proRobIntranet.api.response.TimesheetRow;
@@ -43,6 +44,7 @@ import com.klakier.proRobIntranet.fragments.SigninFragment;
 import com.klakier.proRobIntranet.fragments.TeamFragment;
 import com.klakier.proRobIntranet.fragments.WorkingTimeFragment;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnFragmentInteractionListener {
@@ -56,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String HOLIDAYS_FRAGMENT_TAG = "holidaysFragment";
     private static final String TEAM_FRAGMENT_TAG = "teamFragment";
     private SigninFragment signinFragment;
-    private HomeFragment homeFragment;
 
     private FragmentManager fragmentManager;
     private NavigationView navigationView;
@@ -223,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        final int id = item.getItemId();
 
         switch (id) {
             case R.id.action_settings: {
@@ -236,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             case R.id.action_test: {
+
                 DBProRob dbProRob = new DBProRob(this, null);
                 UserDataShort user = dbProRob.getUser();
                 if (user != null)
@@ -312,12 +314,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         @Override
                         public void onSuccess(StandardResponse response) {
                             dbProRob.deleteTimesheetRow(tsr.getIdLocal());
-                            Log.d(TAG_DELETE, "success delete local ID:" + tsr.getIdLocal() + " externarl ID:" + tsr.getIdExternal());
+                            Log.d(TAG_DELETE, "success delete local ID:" + tsr.getIdLocal() + " external ID:" + tsr.getIdExternal());
                         }
 
                         @Override
                         public void onFailure(StandardResponse response) {
-                            Log.d(TAG_DELETE, "!failed delete local ID:" + tsr.getIdLocal() + " externarl ID:" + tsr.getIdExternal()
+                            Log.d(TAG_DELETE, "!failed delete local ID:" + tsr.getIdLocal() + " external ID:" + tsr.getIdExternal()
                                     + " error:" + response.getError().toString() + " message:" + response.getMessage());
                         }
                     });
@@ -371,10 +373,97 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                 });
+                return true;
             }
             case R.id.action_test5: {
+                final String TAG_UPDATES = "UpdatesLocExt";
+                Log.d(TAG_UPDATES, "Start checking updates");
+                final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
+                GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
+                getTimesheetCall.enqueue(new OnResponseListener() {
+                    @Override
+                    public void onSuccess(StandardResponse response) {
+                        TimesheetResponse timesheetResponse = (TimesheetResponse) response;
 
-                break;
+                        final List<TimesheetRow> tsrExtDb = timesheetResponse.getData();
+                        final List<TimesheetRow> tsrLocDb = dbProRob.readTimesheet();
+
+                        if (tsrExtDb.size() != tsrLocDb.size()) {
+                            Log.d(TAG_UPDATES, "Different size of Db");
+                            return;
+                        }
+
+                        final List<TimesheetRow> newerExt = new ArrayList<TimesheetRow>();
+                        final List<TimesheetRow> newerLoc = new ArrayList<TimesheetRow>();
+                        final List<TimesheetRow> equals = new ArrayList<TimesheetRow>();
+                        final List<TimesheetRow> notequals = new ArrayList<>();
+
+                        Stream.of(tsrLocDb).forEach(new Consumer<TimesheetRow>() {
+                            @Override
+                            public void accept(final TimesheetRow l) {
+                                TimesheetRow e = Stream.of(tsrExtDb).filter(new Predicate<TimesheetRow>() {
+                                    @Override
+                                    public boolean test(TimesheetRow t) {
+                                        return l.getIdExternal().equals(t.getIdExternal());
+                                    }
+                                }).findFirst()
+                                        .get();
+
+                                int compare = l.getUpdatedAt().compareTo(e.getUpdatedAt());
+
+                                if (compare == 0) {
+                                    if (l.hashCode() == e.hashCode())
+                                        equals.add(l);
+                                    else
+                                        notequals.add(l);
+                                } else if (compare < 0) {
+                                    e.setIdLocal(l.getIdLocal());
+                                    newerExt.add(e);
+                                } else {
+                                    newerLoc.add(l);
+                                }
+                            }
+                        });
+                        Log.d(TAG_UPDATES, "****** COMPARE RESULTS ******");
+                        Log.d(TAG_UPDATES, "Newer in LocDB: " + newerLoc.size());
+                        Log.d(TAG_UPDATES, "Newer in ExtDB: " + newerExt.size());
+                        Log.d(TAG_UPDATES, "Equals timestamps: " + equals.size());
+                        Log.d(TAG_UPDATES, "Equals timestamps, different hashes: " + notequals.size());
+                        Log.d(TAG_UPDATES, "*****************************");
+
+                        //update Local
+                        final int[] rowsUpdatedLocal = {0};
+                        for (TimesheetRow tsr : newerExt) {
+                            rowsUpdatedLocal[0] += dbProRob.updateTimesheetRow(tsr, String.valueOf(tsr.getIdLocal()));
+                        }
+                        Log.d(TAG_UPDATES, "Updated " + rowsUpdatedLocal[0] + " in local DB");
+
+                        //update External
+                        for (final TimesheetRow tsr : newerLoc) {
+                            UpdateTimesheetCall updateTimesheetCall = new UpdateTimesheetCall(getApplicationContext(), new Token(getApplicationContext()), tsr);
+                            updateTimesheetCall.enqueue(new OnResponseListener() {
+                                @Override
+                                public void onSuccess(StandardResponse response) {
+                                    Log.d(TAG_UPDATES, "success update local ID:" + tsr.getIdLocal() + " external ID:" + tsr.getIdExternal());
+                                }
+
+                                @Override
+                                public void onFailure(StandardResponse response) {
+                                    Log.d(TAG_UPDATES, "!failed update local ID:" + tsr.getIdLocal() + " external ID:" + tsr.getIdExternal()
+                                            + " error:" + response.getError().toString() + " message:" + response.getMessage());
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(StandardResponse response) {
+                        Log.d(TAG_UPDATES, "failed to get timesheet,"
+                                + " error:" + response.getError().toString() + " message:" + response.getMessage());
+                    }
+                });
+
+                return true;
             }
         }
 
