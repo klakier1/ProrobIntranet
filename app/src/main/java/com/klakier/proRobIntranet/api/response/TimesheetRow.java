@@ -49,6 +49,9 @@ public class TimesheetRow implements Cloneable {
     @SerializedName("updated_at")
     @Expose
     private Timestamp updatedAt;
+    @SerializedName("project")
+    @Expose
+    private String project;
 
     /**
      * No args constructor for use in serialization
@@ -70,9 +73,10 @@ public class TimesheetRow implements Cloneable {
      * @param projectId
      * @param status
      * @param updatedAt
+     * @param project
      */
     public TimesheetRow(Integer idExternal, Integer userId, Date date, Time from, Time to, Time customerBreak, Time statutoryBreak, String comments, Integer projectId, Integer companyId, Boolean status, Timestamp createdAt,
-                        Timestamp updatedAt) {
+                        Timestamp updatedAt, String project) {
         super();
         this.idExternal = idExternal;
         this.userId = userId;
@@ -87,6 +91,7 @@ public class TimesheetRow implements Cloneable {
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.project = project;
     }
 
     public Integer getIdExternal() {
@@ -201,6 +206,14 @@ public class TimesheetRow implements Cloneable {
         this.updatedAt = updatedAt;
     }
 
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String projectId) {
+        this.project = project;
+    }
+
     public Object clone() throws
             CloneNotSupportedException {
         return super.clone();
@@ -224,6 +237,7 @@ public class TimesheetRow implements Cloneable {
         if (!companyId.equals(that.companyId)) return false;
         if (!status.equals(that.status)) return false;
         if (!createdAt.equals(that.createdAt)) return false;
+        if (!project.equals(that.project)) return false;
         return updatedAt.equals(that.updatedAt);
     }
 
@@ -241,6 +255,7 @@ public class TimesheetRow implements Cloneable {
         result = 31 * result + status.hashCode();
         result = 31 * result + createdAt.hashCode();
         result = 31 * result + updatedAt.hashCode();
+        result = 31 * result + project.hashCode();
         return result;
     }
 }

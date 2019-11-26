@@ -44,6 +44,7 @@ public class InsertTimesheetRowCall implements ApiCall {
                         mTsr.getStatus(),
                         mTsr.getCreatedAt(),
                         mTsr.getUpdatedAt(),
+                        mTsr.getProject(),
                         "Bearer " + mToken.getToken());
     }
 

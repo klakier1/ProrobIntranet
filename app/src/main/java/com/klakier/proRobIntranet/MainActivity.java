@@ -26,10 +26,12 @@ import com.annimon.stream.Stream;
 import com.annimon.stream.function.Consumer;
 import com.annimon.stream.function.Predicate;
 import com.klakier.proRobIntranet.api.call.DeleteTimesheetRowCall;
+import com.klakier.proRobIntranet.api.call.GetObjectivesCall;
 import com.klakier.proRobIntranet.api.call.GetTimesheetCall;
 import com.klakier.proRobIntranet.api.call.InsertTimesheetRowCall;
 import com.klakier.proRobIntranet.api.call.OnResponseListener;
 import com.klakier.proRobIntranet.api.call.UpdateTimesheetCall;
+import com.klakier.proRobIntranet.api.response.ObjectivesResponse;
 import com.klakier.proRobIntranet.api.response.StandardResponse;
 import com.klakier.proRobIntranet.api.response.TimesheetResponse;
 import com.klakier.proRobIntranet.api.response.TimesheetRow;
@@ -178,7 +180,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void signIn() {
         Token token = new Token(this);
         DBProRob dbProRob = new DBProRob(this, null);
-        if (!token.hasToken() || !dbProRob.hasUser()) logOut();
+        if (!token.hasToken() || !dbProRob.hasUser()) {
+            logOut();
+            return;
+        }
 
         syncDrawerWithDB();
         setDrawerEnabled(true);
@@ -229,8 +234,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (id) {
             case R.id.action_settings: {
                 Token token = new Token(this);
-                if (token.hasToken())
+                if (token.hasToken()) {
                     Toast.makeText(this, "id: " + token.getId() + " role: " + token.getRole(), Toast.LENGTH_LONG).show();
+                    new GetObjectivesCall(this, token).enqueue(new OnResponseListener() {
+                        @Override
+                        public void onSuccess(StandardResponse response) {
+                            DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
+                            dbProRob.writeObjectives(((ObjectivesResponse) response).getData());
+                            Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+
+                        @Override
+                        public void onFailure(StandardResponse response) {
+                            Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
                 else
                     Toast.makeText(this, "Token not set", Toast.LENGTH_LONG).show();
                 return true;
@@ -257,12 +276,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
                         List<TimesheetRow> filtredLtsr = dbProRob.filterTimesheetRows(ltsr);
                         dbProRob.writeTimesheet(filtredLtsr);
-                        Toast.makeText(getApplicationContext(), "zaimportowano z bazy", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onFailure(StandardResponse response) {
-                        Toast.makeText(getApplicationContext(), "call failed", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 });
                 return true;

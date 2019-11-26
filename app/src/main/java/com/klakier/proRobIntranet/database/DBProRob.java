@@ -21,11 +21,12 @@ import java.util.List;
 
 public class DBProRob extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 7;
     private static final String DATABASE_NAME = "prorob.db";
     //tables names
     private static final String TABLE_CURRENT_USER = "currentUser";
     private static final String TABLE_TIMESHEET = "timesheet";
+    private static final String TABLE_OBJECTIVES = "objectives";
     //column names currentUser
     private static final String COL_ID = "id";
     private static final String COL_EMAIL = "email";
@@ -53,6 +54,11 @@ public class DBProRob extends SQLiteOpenHelper {
     private static final String COL_STATUS = "status";
     private static final String COL_CREATED_AT = "created_at";
     private static final String COL_UPDATED_AT = "updated_at";
+    private static final String COL_PROJECT = "project";
+    //column name objectives
+    //private static final String COL_ID = "id";
+    private static final String COL_OBJECTIVE = "objective";
+
     private static final String CREATE_USER_TABLE = "CREATE TABLE " + TABLE_CURRENT_USER + "(" +
             COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE," +
             COL_EMAIL + " TEXT," +
@@ -80,7 +86,12 @@ public class DBProRob extends SQLiteOpenHelper {
             COL_ID_COMPANY + " INTEGER," +
             COL_STATUS + " BOOLEAN," +
             COL_CREATED_AT + " TEXT," +
-            COL_UPDATED_AT + " TEXT" +
+            COL_UPDATED_AT + " TEXT," +
+            COL_PROJECT + " TEXT" +
+            ");";
+    private static final String CREATE_OBJECTIVES_TABLE = "CREATE TABLE " + TABLE_OBJECTIVES + "(" +
+            COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE," +
+            COL_OBJECTIVE + " TEXT" +
             ");";
     private Context mContext;
 
@@ -93,12 +104,14 @@ public class DBProRob extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_USER_TABLE);
         db.execSQL(CREATE_TIMESHEET_TABLE);
+        db.execSQL(CREATE_OBJECTIVES_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_CURRENT_USER + ";");
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TIMESHEET + ";");
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_OBJECTIVES + ";");
         onCreate(db);
     }
 
@@ -184,6 +197,7 @@ public class DBProRob extends SQLiteOpenHelper {
         contentValues.put(COL_STATUS, tsr.getStatus());
         contentValues.put(COL_CREATED_AT, tsr.getCreatedAt().toString());
         contentValues.put(COL_UPDATED_AT, tsr.getUpdatedAt().toString());
+        contentValues.put(COL_PROJECT, tsr.getProject());
 
         SQLiteDatabase db = getWritableDatabase();
         long ret = db.insert(TABLE_TIMESHEET, null, contentValues);
@@ -217,7 +231,8 @@ public class DBProRob extends SQLiteOpenHelper {
                 c.getInt(c.getColumnIndex(COL_ID_COMPANY)),
                 c.getInt(c.getColumnIndex(COL_STATUS)) == 1,
                 Timestamp.valueOf(c.getString(c.getColumnIndex(COL_CREATED_AT))),
-                Timestamp.valueOf(c.getString(c.getColumnIndex(COL_UPDATED_AT)))
+                Timestamp.valueOf(c.getString(c.getColumnIndex(COL_UPDATED_AT))),
+                c.getString(c.getColumnIndex(COL_PROJECT))
         );
         tsr.setIdLocal(c.getInt(c.getColumnIndex(COL_ID_LOCAL)));
         return tsr;
@@ -352,6 +367,7 @@ public class DBProRob extends SQLiteOpenHelper {
         contentValues.put(COL_STATUS, tsr.getStatus());
         //contentValues.put(COL_CREATED_AT, tsr.getCreatedAt().toString());
         contentValues.put(COL_UPDATED_AT, tsr.getUpdatedAt().toString());
+        contentValues.put(COL_PROJECT, tsr.getProject());
 
         SQLiteDatabase db = getWritableDatabase();
         int ret = db.update(TABLE_TIMESHEET, contentValues, COL_ID_LOCAL + "=?", new String[]{id});
@@ -371,5 +387,42 @@ public class DBProRob extends SQLiteOpenHelper {
         return filtered;
     }
 
+    //OBJECTIVES TABLE FUNCTIONS ************************************
+    public List<String> readObjectives() {
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_OBJECTIVES;
 
+        Cursor c = db.rawQuery(query, null);
+        List<String> objectives = new ArrayList<String>();
+
+        while (c.moveToNext()) {
+            objectives.add(c.getString(c.getColumnIndex(COL_OBJECTIVE)));
+        }
+
+        db.close();
+        c.close();
+
+        return objectives;
+    }
+
+    public long writeObjective(String objective) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_OBJECTIVE, objective);
+
+        SQLiteDatabase db = getWritableDatabase();
+        long ret = db.insert(TABLE_OBJECTIVES, null, contentValues);
+        db.close();
+        return ret;
+    }
+
+    public long writeObjectives(List<String> objectives) {
+        long ret = 0;
+        for (String objective : objectives) {
+            if (writeObjective(objective) != -1)
+                ret++;
+            else
+                return -1;
+        }
+        return ret;
+    }
 }

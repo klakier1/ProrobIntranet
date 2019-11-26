@@ -38,12 +38,11 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdap
         timeSheetRowView.textViewTo.setText(tsr.getTo().toString());
         timeSheetRowView.textViewCustomerBreak.setText(tsr.getCustomerBreak().toString());
         timeSheetRowView.textViewStatutoryBreak.setText(tsr.getStatutoryBreak().toString());
-        timeSheetRowView.textViewCompany.setText(tsr.getCompanyId().toString());
-        timeSheetRowView.textViewProject.setText(tsr.getProjectId().toString());
         timeSheetRowView.textViewComment.setText(tsr.getComments());
         timeSheetRowView.textViewUserID.setText("Id:" + tsr.getIdLocal().toString() + "  IdExt:" + tsr.getIdExternal().toString() + "  IdUser:" + tsr.getUserId().toString());
         timeSheetRowView.textViewCreatedAt.setText(tsr.getCreatedAt().toString());
         timeSheetRowView.textViewUpdatedAt.setText(tsr.getUpdatedAt().toString());
+        timeSheetRowView.textViewProjectName.setText(tsr.getProject());
     }
 
     @Override
@@ -60,8 +59,7 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdap
         public TextView textViewDate;
         public TextView textViewFrom;
         public TextView textViewTo;
-        public TextView textViewCompany;
-        public TextView textViewProject;
+        public TextView textViewProjectName;
         public TextView textViewStatutoryBreak;
         public TextView textViewCustomerBreak;
         public TextView textViewComment;
@@ -75,8 +73,7 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdap
             textViewDate = itemView.findViewById(R.id.textViewDate);
             textViewFrom = itemView.findViewById(R.id.textViewFrom);
             textViewTo = itemView.findViewById(R.id.textViewTo);
-            textViewCompany = itemView.findViewById(R.id.textViewCompany);
-            textViewProject = itemView.findViewById(R.id.textViewProject);
+            textViewProjectName = itemView.findViewById(R.id.textViewProjectName);
             textViewStatutoryBreak = itemView.findViewById(R.id.textViewStatutoryBreak);
             textViewCustomerBreak = itemView.findViewById(R.id.textViewCustomerBreak);
             textViewComment = itemView.findViewById(R.id.textViewComment);

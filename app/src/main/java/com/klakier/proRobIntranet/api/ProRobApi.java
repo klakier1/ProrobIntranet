@@ -1,5 +1,6 @@
 package com.klakier.proRobIntranet.api;
 
+import com.klakier.proRobIntranet.api.response.ObjectivesResponse;
 import com.klakier.proRobIntranet.api.response.StandardResponse;
 import com.klakier.proRobIntranet.api.response.TimesheetResponse;
 import com.klakier.proRobIntranet.api.response.TimesheetRowInsertedResponse;
@@ -56,6 +57,7 @@ public interface ProRobApi {
             @Field("status") boolean status,
             @Field("created_at") Timestamp created_at,
             @Field("updated_at") Timestamp updated_at,
+            @Field("project") String project,
             @Header("Authorization") String authorization
     );
 
@@ -78,6 +80,12 @@ public interface ProRobApi {
             @Field("project_id") int project_id,
             @Field("company_id") int company_id,
             @Field("updated_at") Timestamp updated_at,
+            @Field("project") String project,
+            @Header("Authorization") String authorization
+    );
+
+    @GET("api/objectives")
+    Call<ObjectivesResponse> getObjectives(
             @Header("Authorization") String authorization
     );
 }

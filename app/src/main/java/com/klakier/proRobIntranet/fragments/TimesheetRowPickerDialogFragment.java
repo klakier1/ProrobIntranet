@@ -36,8 +36,7 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
     private TextView textViewToValue;
     private TextView textViewCustomerBreakValue;
     private TextView textViewStatutoryBreakValue;
-    private Spinner spinnerCompany;
-    private Spinner spinnerProject;
+    private Spinner spinnerProjectName;
     private EditText editTextComments;
 
     private DatePickerDialog datePickerDialog;
@@ -55,7 +54,7 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         Time timeToDef = Time.valueOf("15:00:00");
         Time timeCustomerBreakDef = Time.valueOf("00:15:00");
         Time timeStatutoryBreakDef = Time.valueOf("00:15:00");
-        defVal = new TimesheetRow(0, 0, today, timeFromDef, timeToDef, timeCustomerBreakDef, timeStatutoryBreakDef, null, 0, 0, false, null, null);
+        defVal = new TimesheetRow(0, 0, today, timeFromDef, timeToDef, timeCustomerBreakDef, timeStatutoryBreakDef, null, 0, 0, false, null, null, "");
     }
 
     public static TimesheetRowPickerDialogFragment newInstance(TimesheetRow defVal, DialogResultListener listener) {
@@ -103,8 +102,7 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         textViewToValue = view.findViewById(R.id.textViewDialogToValue);
         textViewCustomerBreakValue = view.findViewById(R.id.textViewDialogCustomerBreakValue);
         textViewStatutoryBreakValue = view.findViewById(R.id.textViewDialogStatutoryBreakValue);
-        spinnerProject = view.findViewById(R.id.spinnerProjectId);
-        spinnerCompany = view.findViewById(R.id.spinnerCompanyId);
+        spinnerProjectName = view.findViewById(R.id.spinnerProjectName);
         editTextComments = view.findViewById(R.id.editTextComments);
 
         textViewDate.setText(defVal.getDate().toString());
