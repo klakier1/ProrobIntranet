@@ -240,6 +240,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         @Override
                         public void onSuccess(StandardResponse response) {
                             DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
+                            long i = dbProRob.clearObjectives();
                             dbProRob.writeObjectives(((ObjectivesResponse) response).getData());
                             Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_LONG).show();
                         }
@@ -291,7 +292,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 final String TAG_INSERT = "InsertingToExtDB";
                 Log.d(TAG_INSERT, "start inserting");
                 final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
-                List<TimesheetRow> listToSync = dbProRob.readTimesheet(String.valueOf(0), true);
+                List<TimesheetRow> listToSync = dbProRob.readTimesheet(0, true);
                 for (final TimesheetRow tsr : listToSync) {
                     final InsertTimesheetRowCall insertTimesheetRowCall =
                             new InsertTimesheetRowCall(

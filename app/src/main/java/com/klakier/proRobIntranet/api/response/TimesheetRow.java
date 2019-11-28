@@ -7,6 +7,8 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
+import static com.klakier.proRobIntranet.Util.objectEquals;
+
 public class TimesheetRow implements Cloneable {
 
     @SerializedName("id")
@@ -210,7 +212,7 @@ public class TimesheetRow implements Cloneable {
         return project;
     }
 
-    public void setProject(String projectId) {
+    public void setProject(String project) {
         this.project = project;
     }
 
@@ -232,12 +234,12 @@ public class TimesheetRow implements Cloneable {
         if (!to.equals(that.to)) return false;
         if (!customerBreak.equals(that.customerBreak)) return false;
         if (!statutoryBreak.equals(that.statutoryBreak)) return false;
-        if (!comments.equals(that.comments)) return false;
+        if (!objectEquals(comments, that.comments)) return false;
         if (!projectId.equals(that.projectId)) return false;
         if (!companyId.equals(that.companyId)) return false;
         if (!status.equals(that.status)) return false;
         if (!createdAt.equals(that.createdAt)) return false;
-        if (!project.equals(that.project)) return false;
+        if (!objectEquals(project, that.project)) return false;
         return updatedAt.equals(that.updatedAt);
     }
 

@@ -53,7 +53,7 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
             public void onClick(View view) {
 
                 TimesheetRowPickerDialogFragment dialog = new TimesheetRowPickerDialogFragment();
-                dialog.setDiaglogResultListener(new TimesheetRowPickerDialogFragment.DialogResultListener() {
+                dialog.setDialogResultListener(new TimesheetRowPickerDialogFragment.DialogResultListener() {
                     @Override
                     public void onDialogResult(TimesheetRow timesheetRow) {
                         long id = new DBProRob(mContext, null).writeTimesheet(timesheetRow);
@@ -112,7 +112,7 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                         int idToRemove = mListTsr.get(position).getIdLocal();
                         DBProRob dbProRob = new DBProRob(mContext, null);
 
-                        TimesheetRow timesheetRow = Stream.of(dbProRob.readTimesheet(String.valueOf(idToRemove), false)).findFirst().get();
+                        TimesheetRow timesheetRow = Stream.of(dbProRob.readTimesheet(idToRemove, false)).findFirst().get();
                         int extId = timesheetRow.getIdExternal();
 
                         if (extId == 0) {
@@ -137,10 +137,12 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                         TimesheetRowPickerDialogFragment dialog = new TimesheetRowPickerDialogFragment();
                         try {
                             dialog.setValues((TimesheetRow) mListTsr.get(position).clone());
+                            int idUpdate = mListTsr.get(position).getIdLocal();
+                            dialog.setValues(new DBProRob(mContext, null).readTimesheet(idUpdate, false).get(0));
                         } catch (CloneNotSupportedException e) {
                             e.printStackTrace();
                         }
-                        dialog.setDiaglogResultListener(new TimesheetRowPickerDialogFragment.DialogResultListener() {
+                        dialog.setDialogResultListener(new TimesheetRowPickerDialogFragment.DialogResultListener() {
                             @Override
                             public void onDialogResult(TimesheetRow timesheetRow) {
                                 int updated = new DBProRob(mContext, null).updateTimesheetRow(timesheetRow, timesheetRow.getIdLocal().toString());

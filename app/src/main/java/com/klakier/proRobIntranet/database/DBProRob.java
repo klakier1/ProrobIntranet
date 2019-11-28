@@ -274,7 +274,7 @@ public class DBProRob extends SQLiteOpenHelper {
         return ltsr;
     }
 
-    public List<TimesheetRow> readTimesheet(String id, boolean idExternal) {
+    public List<TimesheetRow> readTimesheet(int id, boolean idExternal) {
         SQLiteDatabase db = getReadableDatabase();
         String columnId = idExternal ? COL_ID_EXTERNAL : COL_ID_LOCAL;
         String query = "SELECT * FROM " + TABLE_TIMESHEET + " WHERE "
@@ -423,6 +423,13 @@ public class DBProRob extends SQLiteOpenHelper {
             else
                 return -1;
         }
+        return ret;
+    }
+
+    public long clearObjectives() {
+        SQLiteDatabase db = getWritableDatabase();
+        long ret = db.delete(TABLE_OBJECTIVES, null, null);
+        db.close();
         return ret;
     }
 }

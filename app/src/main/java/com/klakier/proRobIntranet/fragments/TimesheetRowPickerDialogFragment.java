@@ -9,8 +9,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -20,17 +24,21 @@ import android.widget.TimePicker;
 import com.klakier.proRobIntranet.R;
 import com.klakier.proRobIntranet.Token;
 import com.klakier.proRobIntranet.api.response.TimesheetRow;
+import com.klakier.proRobIntranet.database.DBProRob;
 
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class TimesheetRowPickerDialogFragment extends DialogFragment {
 
     private DialogResultListener dialogResultListener;
 
-    private TimesheetRow defVal;
+    private TimesheetRow newTimesheetRow;
+    private TimesheetRow oldTimesheetRow;
     private TextView textViewDate;
     private TextView textViewFromValue;
     private TextView textViewToValue;
@@ -46,6 +54,8 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
     private TimePickerDialog timePickerDialogStatutoryBreak;
     private Calendar calendar;
 
+    private List<String> projects;
+
 
     public TimesheetRowPickerDialogFragment() {
         calendar = Calendar.getInstance();
@@ -54,22 +64,29 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         Time timeToDef = Time.valueOf("15:00:00");
         Time timeCustomerBreakDef = Time.valueOf("00:15:00");
         Time timeStatutoryBreakDef = Time.valueOf("00:15:00");
-        defVal = new TimesheetRow(0, 0, today, timeFromDef, timeToDef, timeCustomerBreakDef, timeStatutoryBreakDef, null, 0, 0, false, null, null, "");
+        newTimesheetRow = new TimesheetRow(0, 0, today, timeFromDef, timeToDef, timeCustomerBreakDef, timeStatutoryBreakDef, null, 0, 0, false, null, null, null);
+
+
     }
 
     public static TimesheetRowPickerDialogFragment newInstance(TimesheetRow defVal, DialogResultListener listener) {
         TimesheetRowPickerDialogFragment fragment = new TimesheetRowPickerDialogFragment();
         fragment.setValues(defVal);
-        fragment.setDiaglogResultListener(listener);
+        fragment.setDialogResultListener(listener);
         return fragment;
     }
 
     public void setValues(TimesheetRow defVal) {
-        this.defVal = defVal;
+        this.newTimesheetRow = defVal;
+        try {
+            this.oldTimesheetRow = (TimesheetRow) defVal.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void setDiaglogResultListener(DialogResultListener diaglogResultListener) {
-        this.dialogResultListener = diaglogResultListener;
+    public void setDialogResultListener(DialogResultListener dialogResultListener) {
+        this.dialogResultListener = dialogResultListener;
     }
 
     @NonNull
@@ -85,13 +102,17 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (dialogResultListener != null) {
-                    Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-                    if (defVal.getCreatedAt() == null)    //set timestamp only if is null, that mean object is new
-                        defVal.setCreatedAt(timestamp);
-                    defVal.setUpdatedAt(timestamp);
-                    defVal.setUserId(new Token(getContext()).getId());
-                    defVal.setComments(editTextComments.getText().toString());
-                    dialogResultListener.onDialogResult(defVal);
+                    if (!newTimesheetRow.equals(oldTimesheetRow)) { //if something is changed
+
+                        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+                        if (newTimesheetRow.getCreatedAt() == null)    //set timestamp only if is null, that mean object is new
+                            newTimesheetRow.setCreatedAt(timestamp);
+                        newTimesheetRow.setUpdatedAt(timestamp);
+                        if (newTimesheetRow.getUserId() == 0)
+                            newTimesheetRow.setUserId(new Token(getContext()).getId()); //set userId only if is 0, that mean object is new
+
+                        dialogResultListener.onDialogResult(newTimesheetRow);
+                    }
                 }
             }
         });
@@ -105,19 +126,70 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         spinnerProjectName = view.findViewById(R.id.spinnerProjectName);
         editTextComments = view.findViewById(R.id.editTextComments);
 
-        textViewDate.setText(defVal.getDate().toString());
-        textViewFromValue.setText(defVal.getFrom().toString());
-        textViewToValue.setText(defVal.getTo().toString());
-        textViewCustomerBreakValue.setText(defVal.getCustomerBreak().toString());
-        textViewStatutoryBreakValue.setText(defVal.getStatutoryBreak().toString());
-        editTextComments.setText(defVal.getComments());
+        textViewDate.setText(newTimesheetRow.getDate().toString());
+        textViewFromValue.setText(newTimesheetRow.getFrom().toString());
+        textViewToValue.setText(newTimesheetRow.getTo().toString());
+        textViewCustomerBreakValue.setText(newTimesheetRow.getCustomerBreak().toString());
+        textViewStatutoryBreakValue.setText(newTimesheetRow.getStatutoryBreak().toString());
+        editTextComments.setText(newTimesheetRow.getComments());
+
+        projects = new ArrayList<String>();
+        projects.add("");
+        projects.addAll(new DBProRob(getContext(), null).readObjectives());
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, projects);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        //PROJECT SPINNER
+        spinnerProjectName.setAdapter(spinnerAdapter);
+        spinnerProjectName.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (projects.get(position).equals(""))
+                    newTimesheetRow.setProject(null);
+                else
+                    newTimesheetRow.setProject(projects.get(position));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        int indexSpinner = projects.indexOf(newTimesheetRow.getProject());
+        if (indexSpinner == -1)
+            spinnerProjectName.setSelection(0);
+        else
+            spinnerProjectName.setSelection(indexSpinner);
+
+
+        //COMMENTS
+        editTextComments.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.toString().equals(""))
+                    newTimesheetRow.setComments(null);
+                else
+                    newTimesheetRow.setComments(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
 
         //DATE
         datePickerDialog = new DatePickerDialog(getContext(), new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                 Date date = Date.valueOf(year + "-" + (month + 1) + "-" + dayOfMonth);
-                defVal.setDate(date);
+                newTimesheetRow.setDate(date);
                 textViewDate.setText(date.toString());
             }
         }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
@@ -130,12 +202,12 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         });
 
         //TIME FROM
-        calendar.setTime(defVal.getFrom());
+        calendar.setTime(newTimesheetRow.getFrom());
         timePickerDialogFrom = new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                 Time time = Time.valueOf(hourOfDay + ":" + minute + ":00");
-                defVal.setFrom(time);
+                newTimesheetRow.setFrom(time);
                 textViewFromValue.setText(time.toString());
             }
         }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
@@ -148,12 +220,12 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         });
 
         //TIME TO
-        calendar.setTime(defVal.getTo());
+        calendar.setTime(newTimesheetRow.getTo());
         timePickerDialogTo = new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                 Time time = Time.valueOf(hourOfDay + ":" + minute + ":00");
-                defVal.setTo(time);
+                newTimesheetRow.setTo(time);
                 textViewToValue.setText(time.toString());
             }
         }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
@@ -166,12 +238,12 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         });
 
         //TIME CUSTOMER BREAK
-        calendar.setTime(defVal.getCustomerBreak());
+        calendar.setTime(newTimesheetRow.getCustomerBreak());
         timePickerDialogCustomerBreak = new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                 Time time = Time.valueOf(hourOfDay + ":" + minute + ":00");
-                defVal.setCustomerBreak(time);
+                newTimesheetRow.setCustomerBreak(time);
                 textViewCustomerBreakValue.setText(time.toString());
             }
         }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
@@ -184,12 +256,12 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         });
 
         //TIME STATUTORY BREAK
-        calendar.setTime(defVal.getStatutoryBreak());
+        calendar.setTime(newTimesheetRow.getStatutoryBreak());
         timePickerDialogStatutoryBreak = new TimePickerDialog(getContext(), new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                 Time time = Time.valueOf(hourOfDay + ":" + minute + ":00");
-                defVal.setStatutoryBreak(time);
+                newTimesheetRow.setStatutoryBreak(time);
                 textViewStatutoryBreakValue.setText(time.toString());
             }
         }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
