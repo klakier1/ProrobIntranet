@@ -17,24 +17,23 @@ import retrofit2.Response;
 
 public class GetTimesheetCall implements ApiCall {
 
-    Context context;
-    Token token;
+    Context mContext;
+    Token mToken;
+    Call<TimesheetResponse> mCall;
 
     public GetTimesheetCall(Context context, Token token) {
-        this.context = context;
-        this.token = token;
-    }
+        this.mContext = context;
+        this.mToken = token;
 
-    public void enqueue(final OnResponseListener onResponseListener) {
-
-        int id = token.getId();
-
-        Call<TimesheetResponse> call = RetrofitClient
+        mCall = RetrofitClient
                 .getInstance()
                 .getApi()
-                .getTimesheet(id, "Bearer " + token.getToken());
+                .getTimesheet(mToken.getId(), "Bearer " + mToken.getToken());
+    }
 
-        call.enqueue(new Callback<TimesheetResponse>() {
+    @Override
+    public void enqueue(final OnResponseListener onResponseListener) {
+        mCall.enqueue(new Callback<TimesheetResponse>() {
             @Override
             public void onResponse(Call<TimesheetResponse> call, Response<TimesheetResponse> response) {
                 try {
@@ -58,8 +57,26 @@ public class GetTimesheetCall implements ApiCall {
 
             @Override
             public void onFailure(Call<TimesheetResponse> call, Throwable t) {
-                onResponseListener.onFailure(new StandardResponse(true, context.getString(R.string.error_retrofit_msg)));
+                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.error_retrofit_msg)));
             }
         });
+    }
+
+    @Override
+    public StandardResponse execute() {
+        try {
+            Response<TimesheetResponse> response = mCall.execute();
+            if (response.isSuccessful()) {
+                return response.body();
+            } else {
+                return new Gson().fromJson(response.errorBody().string(), StandardResponse.class);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

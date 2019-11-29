@@ -8,6 +8,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,6 +19,7 @@ import com.klakier.proRobIntranet.R;
 import com.klakier.proRobIntranet.TimeSheetViewAdapter;
 import com.klakier.proRobIntranet.api.response.TimesheetRow;
 import com.klakier.proRobIntranet.database.DBProRob;
+import com.klakier.proRobIntranet.database.SyncTask;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +35,27 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
 
     public WorkingTimeFragment() {
         // Required empty public constructor
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        inflater.inflate(R.menu.menu_working_time_fragment, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_sync: {
+                SyncTask syncTask = new SyncTask(mContext);
+                syncTask.execute();
+                return true;
+            }
+            default: {
+                return super.onOptionsItemSelected(item);
+            }
+        }
     }
 
     @Override

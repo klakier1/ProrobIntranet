@@ -17,6 +17,7 @@ public class DelegationFragment extends Fragment {
 
     public DelegationFragment() {
         // Required empty public constructor
+        setHasOptionsMenu(false);
     }
 
 

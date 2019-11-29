@@ -49,11 +49,26 @@ import com.klakier.proRobIntranet.fragments.WorkingTimeFragment;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.abs;
+
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnFragmentInteractionListener {
 
+
+    //DEBUG TAGS ************************
+    private static final String DB_ADD_FROM_EXT_TO_LOC_TAG = "dbOpsAddFromExtToLoc";
+    private static final String DB_ADD_FROM_LOC_TO_EXT_TAG = "dbOpsAddFromLocToExt";
+    private static final String DB_DELETED_IN_EXT_TO_LOC_TAG = "dbOpsDeletedInExtToLoc";
+    private static final String DB_DELETED_IN_LOC_TO_EXT_TAG = "dbOpsDeletedInLocToExt";
+    private static final String DB_UPDATES_TAG = "dbOpsUpdates";
+
+    private static final String START = "***************** Start ***************************";
+    private static final String CALL_ENQUEUE = "Call enqueue";
+    private static final String SUCCESS = "Success -> ";
+    private static final String FAILED = "Failed -> ";
+    //***********************************
     private static final String CHECKED_DRAWER_ITEM = "checkedDrawerItem";
 
-    private static final String SIGNIN_FRAGMENT_TAG = "signinFragment";
+    private static final String SIGN_IN_FRAGMENT_TAG = "signInFragment";
     private static final String HOME_FRAGMENT_TAG = "homeFragment";
     private static final String WORKING_TIME_FRAGMENT_TAG = "workingTimeFragment";
     private static final String DELEGATION_FRAGMENT_TAG = "delegationFragment";
@@ -207,13 +222,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         syncDrawerWithDB();
         setDrawerEnabled(false);
 
-        signinFragment = (SigninFragment) fragmentManager.findFragmentByTag(SIGNIN_FRAGMENT_TAG);
+        signinFragment = (SigninFragment) fragmentManager.findFragmentByTag(SIGN_IN_FRAGMENT_TAG);
         if (signinFragment == null) {
             signinFragment = new SigninFragment();
         }
 
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.main_container, signinFragment, SIGNIN_FRAGMENT_TAG);
+        fragmentTransaction.replace(R.id.main_container, signinFragment, SIGN_IN_FRAGMENT_TAG);
         fragmentTransaction.commit();
     }
 
@@ -250,8 +265,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
-                }
-                else
+                } else
                     Toast.makeText(this, "Token not set", Toast.LENGTH_LONG).show();
                 return true;
             }
@@ -268,6 +282,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
             case R.id.action_test1: {
+                Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, START);
                 GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
                 getTimesheetCall.enqueue(new OnResponseListener() {
                     @Override
@@ -275,24 +290,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         TimesheetResponse timesheetResponse = (TimesheetResponse) response;
                         List<TimesheetRow> ltsr = timesheetResponse.getData();
                         DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
-                        List<TimesheetRow> filtredLtsr = dbProRob.filterTimesheetRows(ltsr);
-                        dbProRob.writeTimesheet(filtredLtsr);
+                        List<TimesheetRow> filteredLtsr = dbProRob.filterTimesheetRows(ltsr);
+                        long ret = dbProRob.writeTimesheet(filteredLtsr);
                         Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, "From server get: " + ltsr.size());
+                        Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, "After filter: " + filteredLtsr.size());
+                        Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, "Inserted to local: " + ret);
+                        Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, SUCCESS + response.toString());
                     }
 
                     @Override
                     public void onFailure(StandardResponse response) {
                         Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_LONG).show();
+                        Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, FAILED + response.toString());
                     }
                 });
+                Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, "Call enqueue");
                 return true;
             }
 
             case R.id.action_test2: {
-                final String TAG_INSERT = "InsertingToExtDB";
-                Log.d(TAG_INSERT, "start inserting");
+                Log.d(DB_ADD_FROM_LOC_TO_EXT_TAG, START);
                 final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
                 List<TimesheetRow> listToSync = dbProRob.readTimesheet(0, true);
+                Log.d(DB_ADD_FROM_LOC_TO_EXT_TAG, "To insert: " + listToSync.size());
                 for (final TimesheetRow tsr : listToSync) {
                     final InsertTimesheetRowCall insertTimesheetRowCall =
                             new InsertTimesheetRowCall(
@@ -305,24 +326,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             TimesheetRowInsertedResponse timesheetRowInsertedResponse = (TimesheetRowInsertedResponse) response;
                             tsr.setIdExternal(timesheetRowInsertedResponse.getId());
                             dbProRob.updateTimesheetRow(tsr, String.valueOf(tsr.getIdLocal()));
-                            Log.d(TAG_INSERT, "success insert local ID:" + tsr.getIdLocal() + " externarl ID:" + tsr.getIdExternal());
+
+                            Log.d(DB_ADD_FROM_LOC_TO_EXT_TAG, SUCCESS + " " + tsr.toString() + " " + response.toString());
                         }
 
                         @Override
                         public void onFailure(StandardResponse response) {
-                            Log.d(TAG_INSERT, "failed  insert local ID:" + tsr.getIdLocal() + " " + response.getMessage());
+                            Log.d(DB_ADD_FROM_LOC_TO_EXT_TAG, FAILED + " " + tsr.toString() + " " + response.toString());
                         }
                     });
+                    Log.d(DB_ADD_FROM_LOC_TO_EXT_TAG, CALL_ENQUEUE + " " + tsr.toString());
                 }
-                Log.d(TAG_INSERT, "stop inserting");
                 return true;
             }
 
             case R.id.action_test3: {
-                final String TAG_DELETE = "DeleteFromExtDB";
-                Log.d(TAG_DELETE, "start deleting");
+                Log.d(DB_DELETED_IN_LOC_TO_EXT_TAG, START);
                 final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
-                List<TimesheetRow> listToDel = dbProRob.readTimesheetMarkedDelete();
+                List<TimesheetRow> listToDel = dbProRob.readTimesheetMarkedDelete();  //all with minus idExt
+                Log.d(DB_DELETED_IN_LOC_TO_EXT_TAG, "Marked to delete: " + listToDel.size());
+
                 for (final TimesheetRow tsr : listToDel) {
                     DeleteTimesheetRowCall deleteTimesheetRowCall =
                             new DeleteTimesheetRowCall(
@@ -333,24 +356,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     deleteTimesheetRowCall.enqueue(new OnResponseListener() {
                         @Override
                         public void onSuccess(StandardResponse response) {
-                            dbProRob.deleteTimesheetRow(tsr.getIdLocal());
-                            Log.d(TAG_DELETE, "success delete local ID:" + tsr.getIdLocal() + " external ID:" + tsr.getIdExternal());
+                            int ret = dbProRob.deleteTimesheetRow(tsr.getIdLocal());
+                            Log.d(DB_DELETED_IN_LOC_TO_EXT_TAG, SUCCESS + " delete local: " + ret + " " + tsr.toString() + " " + response.toString());
                         }
 
                         @Override
                         public void onFailure(StandardResponse response) {
-                            Log.d(TAG_DELETE, "!failed delete local ID:" + tsr.getIdLocal() + " external ID:" + tsr.getIdExternal()
-                                    + " error:" + response.getError().toString() + " message:" + response.getMessage());
+                            Log.d(DB_DELETED_IN_LOC_TO_EXT_TAG, FAILED + " " + tsr.toString() + " " + response.toString());
                         }
                     });
                 }
-                Log.d(TAG_DELETE, "stop deleting");
+                Log.d(DB_DELETED_IN_LOC_TO_EXT_TAG, CALL_ENQUEUE);
                 return true;
             }
 
             case R.id.action_test4: {
-                final String TAG_DELETE = "DeleteFromLocDB";
-                Log.d(TAG_DELETE, "start deleting from locDB");
+                Log.d(DB_DELETED_IN_EXT_TO_LOC_TAG, START);
                 final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
                 GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
                 getTimesheetCall.enqueue(new OnResponseListener() {
@@ -359,7 +380,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         TimesheetResponse timesheetResponse = (TimesheetResponse) response;
 
                         final List<TimesheetRow> tsrExtDb = timesheetResponse.getData();
+                        Log.d(DB_DELETED_IN_EXT_TO_LOC_TAG, "Items in external DB has: " + tsrExtDb.size());
                         final List<TimesheetRow> tsrLocDb = dbProRob.readTimesheet();
+                        Log.d(DB_DELETED_IN_EXT_TO_LOC_TAG, "Items in local DB has: " + tsrLocDb.size());
 
                         Predicate<TimesheetRow> predicateNotInExtDb = new Predicate<TimesheetRow>() {
                             @Override
@@ -367,7 +390,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 return !Stream.of(tsrExtDb).anyMatch(new Predicate<TimesheetRow>() {
                                     @Override
                                     public boolean test(TimesheetRow t) {
-                                        return s.getIdExternal().equals(t.getIdExternal());
+                                        return t.getIdExternal().equals(abs(s.getIdExternal()));
                                     }
                                 });
                             }
@@ -378,26 +401,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Stream.of(notInExtDb).forEach(new Consumer<TimesheetRow>() {
                             @Override
                             public void accept(TimesheetRow q) {
-                                Log.d(TAG_DELETE, "Timesheet row local id:" + q.getIdLocal() + " will be deleted");
+                                Log.d(DB_DELETED_IN_EXT_TO_LOC_TAG, "Timesheet row local id: " + q.toString() + " will be deleted");
                             }
                         });
 
                         int deletedSize = dbProRob.deleteTimesheetRows(notInExtDb);
-                        Log.d(TAG_DELETE, "on list was:" + notInExtDb.size() + " and " + deletedSize + " is deleted ");
+                        Log.d(DB_DELETED_IN_EXT_TO_LOC_TAG, "On list was: " + notInExtDb.size() + " and " + deletedSize + " is deleted");
                     }
 
                     @Override
                     public void onFailure(StandardResponse response) {
-                        Log.d(TAG_DELETE, "failed to get timesheet,"
-                                + " error:" + response.getError().toString() + " message:" + response.getMessage());
+                        Log.d(DB_DELETED_IN_EXT_TO_LOC_TAG, FAILED + response.toString());
                     }
 
                 });
+                Log.d(DB_DELETED_IN_EXT_TO_LOC_TAG, CALL_ENQUEUE);
                 return true;
             }
             case R.id.action_test5: {
-                final String TAG_UPDATES = "UpdatesLocExt";
-                Log.d(TAG_UPDATES, "Start checking updates");
+                Log.d(DB_UPDATES_TAG, START);
                 final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
                 GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
                 getTimesheetCall.enqueue(new OnResponseListener() {
@@ -409,14 +431,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         final List<TimesheetRow> tsrLocDb = dbProRob.readTimesheet();
 
                         if (tsrExtDb.size() != tsrLocDb.size()) {
-                            Log.d(TAG_UPDATES, "Different size of Db");
+                            Log.d(DB_UPDATES_TAG, "Different size of Db");
                             return;
                         }
 
                         final List<TimesheetRow> newerExt = new ArrayList<TimesheetRow>();
                         final List<TimesheetRow> newerLoc = new ArrayList<TimesheetRow>();
                         final List<TimesheetRow> equals = new ArrayList<TimesheetRow>();
-                        final List<TimesheetRow> notequals = new ArrayList<>();
+                        final List<TimesheetRow> notEquals = new ArrayList<>();
 
                         Stream.of(tsrLocDb).forEach(new Consumer<TimesheetRow>() {
                             @Override
@@ -435,7 +457,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     if (l.hashCode() == e.hashCode())
                                         equals.add(l);
                                     else
-                                        notequals.add(l);
+                                        notEquals.add(l);
                                 } else if (compare < 0) {
                                     e.setIdLocal(l.getIdLocal());
                                     newerExt.add(e);
@@ -444,19 +466,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
                             }
                         });
-                        Log.d(TAG_UPDATES, "****** COMPARE RESULTS ******");
-                        Log.d(TAG_UPDATES, "Newer in LocDB: " + newerLoc.size());
-                        Log.d(TAG_UPDATES, "Newer in ExtDB: " + newerExt.size());
-                        Log.d(TAG_UPDATES, "Equals timestamps: " + equals.size());
-                        Log.d(TAG_UPDATES, "Equals timestamps, different hashes: " + notequals.size());
-                        Log.d(TAG_UPDATES, "*****************************");
+                        Log.d(DB_UPDATES_TAG, "****** COMPARE RESULTS ******");
+                        Log.d(DB_UPDATES_TAG, "Newer in LocDB: " + newerLoc.size());
+                        Log.d(DB_UPDATES_TAG, "Newer in ExtDB: " + newerExt.size());
+                        Log.d(DB_UPDATES_TAG, "Equals timestamps: " + equals.size());
+                        Log.d(DB_UPDATES_TAG, "Equals timestamps, different hashes: " + notEquals.size());
+
 
                         //update Local
                         final int[] rowsUpdatedLocal = {0};
                         for (TimesheetRow tsr : newerExt) {
                             rowsUpdatedLocal[0] += dbProRob.updateTimesheetRow(tsr, String.valueOf(tsr.getIdLocal()));
                         }
-                        Log.d(TAG_UPDATES, "Updated " + rowsUpdatedLocal[0] + " in local DB");
+                        Log.d(DB_UPDATES_TAG, "Updated " + rowsUpdatedLocal[0] + " in local DB");
 
                         //update External
                         for (final TimesheetRow tsr : newerLoc) {
@@ -464,13 +486,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             updateTimesheetCall.enqueue(new OnResponseListener() {
                                 @Override
                                 public void onSuccess(StandardResponse response) {
-                                    Log.d(TAG_UPDATES, "success update local ID:" + tsr.getIdLocal() + " external ID:" + tsr.getIdExternal());
+                                    Log.d(DB_UPDATES_TAG, SUCCESS + " " + tsr.toString() + " " + response.toString());
                                 }
 
                                 @Override
                                 public void onFailure(StandardResponse response) {
-                                    Log.d(TAG_UPDATES, "!failed update local ID:" + tsr.getIdLocal() + " external ID:" + tsr.getIdExternal()
-                                            + " error:" + response.getError().toString() + " message:" + response.getMessage());
+                                    Log.d(DB_UPDATES_TAG, FAILED + " " + tsr.toString() + " " + response.toString());
                                 }
                             });
                         }
@@ -478,8 +499,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     @Override
                     public void onFailure(StandardResponse response) {
-                        Log.d(TAG_UPDATES, "failed to get timesheet,"
-                                + " error:" + response.getError().toString() + " message:" + response.getMessage());
+                        Log.d(DB_UPDATES_TAG, FAILED + " " + response.toString());
                     }
                 });
 

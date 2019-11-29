@@ -17,22 +17,23 @@ import retrofit2.Response;
 
 public class GetObjectivesCall implements ApiCall {
 
-    Context context;
-    Token token;
+    Context mContext;
+    Token mToken;
+    Call<ObjectivesResponse> mCall;
 
     public GetObjectivesCall(Context context, Token token) {
-        this.context = context;
-        this.token = token;
-    }
+        this.mContext = context;
+        this.mToken = token;
 
-    public void enqueue(final OnResponseListener onResponseListener) {
-
-        Call<ObjectivesResponse> call = RetrofitClient
+        mCall = RetrofitClient
                 .getInstance()
                 .getApi()
-                .getObjectives("Bearer " + token.getToken());
+                .getObjectives("Bearer " + mToken.getToken());
+    }
 
-        call.enqueue(new Callback<ObjectivesResponse>() {
+    @Override
+    public void enqueue(final OnResponseListener onResponseListener) {
+        mCall.enqueue(new Callback<ObjectivesResponse>() {
             @Override
             public void onResponse(Call<ObjectivesResponse> call, Response<ObjectivesResponse> response) {
                 try {
@@ -56,20 +57,15 @@ public class GetObjectivesCall implements ApiCall {
 
             @Override
             public void onFailure(Call<ObjectivesResponse> call, Throwable t) {
-                onResponseListener.onFailure(new StandardResponse(true, context.getString(R.string.error_retrofit_msg)));
+                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.error_retrofit_msg)));
             }
         });
     }
 
+    @Override
     public StandardResponse execute() {
-
-        Call<ObjectivesResponse> call = RetrofitClient
-                .getInstance()
-                .getApi()
-                .getObjectives("Bearer " + token.getToken());
-
         try {
-            Response<ObjectivesResponse> response = call.execute();
+            Response<ObjectivesResponse> response = mCall.execute();
             if (response.isSuccessful()) {
                 return response.body();
             } else {

@@ -1,5 +1,7 @@
 package com.klakier.proRobIntranet.api.response;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -251,13 +253,19 @@ public class TimesheetRow implements Cloneable {
         result = 31 * result + to.hashCode();
         result = 31 * result + customerBreak.hashCode();
         result = 31 * result + statutoryBreak.hashCode();
-        result = 31 * result + comments.hashCode();
+        result = comments != null ? (31 * result + comments.hashCode()) : result;
         result = 31 * result + projectId.hashCode();
         result = 31 * result + companyId.hashCode();
         result = 31 * result + status.hashCode();
         result = 31 * result + createdAt.hashCode();
         result = 31 * result + updatedAt.hashCode();
-        result = 31 * result + project.hashCode();
+        result = project != null ? (31 * result + project.hashCode()) : result;
         return result;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "ID loc: " + this.getIdLocal() + " ID ext: " + this.getIdExternal();
     }
 }

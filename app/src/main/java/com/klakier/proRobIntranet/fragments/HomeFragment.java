@@ -26,6 +26,10 @@ public class HomeFragment extends Fragment {
     private Button buttonLogout;
     private Context context;
 
+    public HomeFragment() {
+        setHasOptionsMenu(false);
+    }
+
     private OnFragmentInteractionListener mListener;
 
     // TODO: Rename method, update argument and hook method into UI event

@@ -16,24 +16,25 @@ import retrofit2.Response;
 
 public class LoginCall implements ApiCall {
 
-    Context context;
-    String login;
-    String password;
+    Context mContext;
+    String mLogin;
+    String mPassword;
+    Call<TokenResponse> mCall;
 
     public LoginCall(Context context, String login, String password) {
-        this.context = context;
-        this.login = login;
-        this.password = password;
-    }
+        this.mContext = context;
+        this.mLogin = login;
+        this.mPassword = password;
 
-    public void enqueue(final OnResponseListener onResponseListener) {
-
-        Call<TokenResponse> call = RetrofitClient
+        mCall = RetrofitClient
                 .getInstance()
                 .getApi()
                 .login(login, password);
+    }
 
-        call.enqueue(new Callback<TokenResponse>() {
+    @Override
+    public void enqueue(final OnResponseListener onResponseListener) {
+        mCall.enqueue(new Callback<TokenResponse>() {
             @Override
             public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
                 try {
@@ -58,9 +59,27 @@ public class LoginCall implements ApiCall {
 
             @Override
             public void onFailure(Call<TokenResponse> call, Throwable t) {
-                onResponseListener.onFailure(new StandardResponse(true, context.getString(R.string.error_retrofit_msg)));
+                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.error_retrofit_msg)));
             }
         });
+    }
+
+    @Override
+    public StandardResponse execute() {
+        try {
+            Response<TokenResponse> response = mCall.execute();
+            if (response.isSuccessful()) {
+                return response.body();
+            } else {
+                return new Gson().fromJson(response.errorBody().string(), StandardResponse.class);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
 

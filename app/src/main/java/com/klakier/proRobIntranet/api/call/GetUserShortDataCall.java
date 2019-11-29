@@ -17,24 +17,23 @@ import retrofit2.Response;
 
 public class GetUserShortDataCall implements ApiCall {
 
-    Context context;
-    Token token;
+    Context mContext;
+    Token mToken;
+    Call<UserDataShortResponse> mCall;
 
     public GetUserShortDataCall(Context context, Token token) {
-        this.context = context;
-        this.token = token;
-    }
+        this.mContext = context;
+        this.mToken = token;
 
-    public void enqueue(final OnResponseListener onResponseListener) {
-
-        int id = token.getId();
-
-        Call<UserDataShortResponse> call = RetrofitClient
+        mCall = RetrofitClient
                 .getInstance()
                 .getApi()
-                .getUserShort(id, "Bearer " + token.getToken());
+                .getUserShort(mToken.getId(), "Bearer " + mToken.getToken());
+    }
 
-        call.enqueue(new Callback<UserDataShortResponse>() {
+    @Override
+    public void enqueue(final OnResponseListener onResponseListener) {
+        mCall.enqueue(new Callback<UserDataShortResponse>() {
             @Override
             public void onResponse(Call<UserDataShortResponse> call, Response<UserDataShortResponse> response) {
                 try {
@@ -58,8 +57,26 @@ public class GetUserShortDataCall implements ApiCall {
 
             @Override
             public void onFailure(Call<UserDataShortResponse> call, Throwable t) {
-                onResponseListener.onFailure(new StandardResponse(true, context.getString(R.string.error_retrofit_msg)));
+                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.error_retrofit_msg)));
             }
         });
+    }
+
+    @Override
+    public StandardResponse execute() {
+        try {
+            Response<UserDataShortResponse> response = mCall.execute();
+            if (response.isSuccessful()) {
+                return response.body();
+            } else {
+                return new Gson().fromJson(response.errorBody().string(), StandardResponse.class);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

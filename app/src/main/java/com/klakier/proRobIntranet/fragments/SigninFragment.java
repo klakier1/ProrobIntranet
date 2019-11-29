@@ -36,6 +36,10 @@ public class SigninFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
+    public SigninFragment() {
+        setHasOptionsMenu(false);
+    }
+
     // TODO: Rename method, update argument and hook method into UI event
     public void onAction(String action) {
         if (mListener != null) {

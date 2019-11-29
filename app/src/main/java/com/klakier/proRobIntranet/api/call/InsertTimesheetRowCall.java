@@ -48,6 +48,7 @@ public class InsertTimesheetRowCall implements ApiCall {
                         "Bearer " + mToken.getToken());
     }
 
+    @Override
     public void enqueue(final OnResponseListener onResponseListener) {
         mCall.enqueue(new Callback<TimesheetRowInsertedResponse>() {
             @Override
@@ -78,5 +79,23 @@ public class InsertTimesheetRowCall implements ApiCall {
                 onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.error_retrofit_msg)));
             }
         });
+    }
+
+    @Override
+    public StandardResponse execute() {
+        try {
+            Response<TimesheetRowInsertedResponse> response = mCall.execute();
+            if (response.isSuccessful()) {
+                return response.body();
+            } else {
+                return new Gson().fromJson(response.errorBody().string(), StandardResponse.class);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

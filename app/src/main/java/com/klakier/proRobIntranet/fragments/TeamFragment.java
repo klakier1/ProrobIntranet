@@ -17,6 +17,7 @@ public class TeamFragment extends Fragment {
 
     public TeamFragment() {
         // Required empty public constructor
+        setHasOptionsMenu(false);
     }
 
 

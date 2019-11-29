@@ -17,19 +17,17 @@ import retrofit2.Response;
 
 public class UpdateTimesheetCall implements ApiCall {
 
-    Context context;
-    Token token;
+    Context mContext;
+    Token mToken;
     TimesheetRow mTsr;
+    Call<StandardResponse> mCall;
 
     public UpdateTimesheetCall(Context context, Token token, TimesheetRow timesheetRow) {
-        this.context = context;
-        this.token = token;
+        this.mContext = context;
+        this.mToken = token;
         this.mTsr = timesheetRow;
-    }
 
-    public void enqueue(final OnResponseListener onResponseListener) {
-
-        Call<StandardResponse> call = RetrofitClient
+        mCall = RetrofitClient
                 .getInstance()
                 .getApi()
                 .updateTimesheet(
@@ -44,9 +42,12 @@ public class UpdateTimesheetCall implements ApiCall {
                         mTsr.getCompanyId(),
                         mTsr.getUpdatedAt(),
                         mTsr.getProject(),
-                        "Bearer " + token.getToken());
+                        "Bearer " + mToken.getToken());
+    }
 
-        call.enqueue(new Callback<StandardResponse>() {
+    @Override
+    public void enqueue(final OnResponseListener onResponseListener) {
+        mCall.enqueue(new Callback<StandardResponse>() {
             @Override
             public void onResponse(Call<StandardResponse> call, Response<StandardResponse> response) {
                 try {
@@ -71,8 +72,26 @@ public class UpdateTimesheetCall implements ApiCall {
 
             @Override
             public void onFailure(Call<StandardResponse> call, Throwable t) {
-                onResponseListener.onFailure(new StandardResponse(true, context.getString(R.string.error_retrofit_msg)));
+                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.error_retrofit_msg)));
             }
         });
+    }
+
+    @Override
+    public StandardResponse execute() {
+        try {
+            Response<StandardResponse> response = mCall.execute();
+            if (response.isSuccessful()) {
+                return response.body();
+            } else {
+                return new Gson().fromJson(response.errorBody().string(), StandardResponse.class);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

@@ -17,6 +17,7 @@ public class HolidaysFragment extends Fragment {
 
     public HolidaysFragment() {
         // Required empty public constructor
+        setHasOptionsMenu(false);
     }
 
 

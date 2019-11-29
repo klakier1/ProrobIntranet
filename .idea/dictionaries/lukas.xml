@@ -2,8 +2,11 @@
   <dictionary name="lukas">
     <words>
       <w>anuluj</w>
+      <w>hasło</w>
       <w>ltsr</w>
+      <w>synchrozniuj</w>
       <w>timesheet</w>
+      <w>zaloguj</w>
     </words>
   </dictionary>
 </component>

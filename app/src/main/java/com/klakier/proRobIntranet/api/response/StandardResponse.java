@@ -1,5 +1,7 @@
 package com.klakier.proRobIntranet.api.response;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -44,4 +46,9 @@ public class StandardResponse {
         this.message = message;
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        return "error: " + getError() + " message: " + getMessage();
+    }
 }
