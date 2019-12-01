@@ -205,7 +205,7 @@ public class DBProRob extends SQLiteOpenHelper {
         return ret;
     }
 
-    public long writeTimesheet(List<TimesheetRow> ltsr) {
+    public long writeTimesheets(List<TimesheetRow> ltsr) {
         long ret = 0;
         for (TimesheetRow tsr : ltsr) {
             //check in row with do
@@ -352,7 +352,7 @@ public class DBProRob extends SQLiteOpenHelper {
         return ret;
     }
 
-    public int updateTimesheetRow(TimesheetRow tsr, String id) {
+    public int updateTimesheetRow(TimesheetRow tsr) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_ID_EXTERNAL, tsr.getIdExternal());
         contentValues.put(COL_ID_USER, tsr.getUserId());
@@ -370,8 +370,19 @@ public class DBProRob extends SQLiteOpenHelper {
         contentValues.put(COL_PROJECT, tsr.getProject());
 
         SQLiteDatabase db = getWritableDatabase();
-        int ret = db.update(TABLE_TIMESHEET, contentValues, COL_ID_LOCAL + "=?", new String[]{id});
+        int ret = db.update(TABLE_TIMESHEET, contentValues, COL_ID_LOCAL + "=?", new String[]{Integer.toString(tsr.getIdLocal())});
         db.close();
+        return ret;
+    }
+
+    public long updateTimesheetRows(List<TimesheetRow> ltsr) {
+        long ret = 0;
+        for (TimesheetRow tsr : ltsr) {
+            if (updateTimesheetRow(tsr) == 1)
+                ret++;
+            else
+                return -1;
+        }
         return ret;
     }
 

@@ -148,7 +148,7 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                             }
                         } else if (extId > 0) {
                             timesheetRow.setIdExternal(extId * (-1));
-                            int updateSize = dbProRob.updateTimesheetRow(timesheetRow, timesheetRow.getIdLocal().toString());
+                            int updateSize = dbProRob.updateTimesheetRow(timesheetRow);
                             if (updateSize == 1) //if number of updated row equals 1, delete from adapter and notify
                             {
                                 mListTsr.remove(position);
@@ -169,7 +169,7 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                         dialog.setDialogResultListener(new TimesheetRowPickerDialogFragment.DialogResultListener() {
                             @Override
                             public void onDialogResult(TimesheetRow timesheetRow) {
-                                int updated = new DBProRob(mContext, null).updateTimesheetRow(timesheetRow, timesheetRow.getIdLocal().toString());
+                                int updated = new DBProRob(mContext, null).updateTimesheetRow(timesheetRow);
                                 if (updated == 1) {
                                     mListTsr.set(position, timesheetRow);
                                     mTimeSheetViewAdapter.notifyItemChanged(position);

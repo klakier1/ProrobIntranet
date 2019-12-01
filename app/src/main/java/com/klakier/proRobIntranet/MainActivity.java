@@ -291,7 +291,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         List<TimesheetRow> ltsr = timesheetResponse.getData();
                         DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
                         List<TimesheetRow> filteredLtsr = dbProRob.filterTimesheetRows(ltsr);
-                        long ret = dbProRob.writeTimesheet(filteredLtsr);
+                        long ret = dbProRob.writeTimesheets(filteredLtsr);
                         Toast.makeText(getApplicationContext(), response.getMessage(), Toast.LENGTH_SHORT).show();
                         Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, "From server get: " + ltsr.size());
                         Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, "After filter: " + filteredLtsr.size());
@@ -325,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         public void onSuccess(StandardResponse response) {
                             TimesheetRowInsertedResponse timesheetRowInsertedResponse = (TimesheetRowInsertedResponse) response;
                             tsr.setIdExternal(timesheetRowInsertedResponse.getId());
-                            dbProRob.updateTimesheetRow(tsr, String.valueOf(tsr.getIdLocal()));
+                            dbProRob.updateTimesheetRow(tsr);
 
                             Log.d(DB_ADD_FROM_LOC_TO_EXT_TAG, SUCCESS + " " + tsr.toString() + " " + response.toString());
                         }
@@ -476,7 +476,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         //update Local
                         final int[] rowsUpdatedLocal = {0};
                         for (TimesheetRow tsr : newerExt) {
-                            rowsUpdatedLocal[0] += dbProRob.updateTimesheetRow(tsr, String.valueOf(tsr.getIdLocal()));
+                            rowsUpdatedLocal[0] += dbProRob.updateTimesheetRow(tsr);
                         }
                         Log.d(DB_UPDATES_TAG, "Updated " + rowsUpdatedLocal[0] + " in local DB");
 

@@ -9,8 +9,6 @@ import com.klakier.proRobIntranet.Token;
 import com.klakier.proRobIntranet.api.response.StandardResponse;
 import com.klakier.proRobIntranet.api.response.TimesheetRow;
 
-import java.io.IOException;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -63,10 +61,9 @@ public class UpdateTimesheetCall implements ApiCall {
                             break;
                         }
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
+                } catch (Exception e) {
+                    StandardResponse errorResponse = new StandardResponse(true, e.getMessage());
+                    onResponseListener.onFailure(errorResponse);
                 }
             }
 
@@ -86,12 +83,9 @@ public class UpdateTimesheetCall implements ApiCall {
             } else {
                 return new Gson().fromJson(response.errorBody().string(), StandardResponse.class);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            return null;
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            return null;
+            return new StandardResponse(true, e.getMessage());
         }
     }
 }
