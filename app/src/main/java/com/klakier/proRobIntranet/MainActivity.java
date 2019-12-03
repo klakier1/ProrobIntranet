@@ -141,10 +141,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        MenuItem checkedItem = navigationView.getCheckedItem();
-        int checkedItemId = checkedItem.getItemId();
-        outState.putInt(CHECKED_DRAWER_ITEM, checkedItemId);
-
+        if (navigationMenu != null) {
+            MenuItem checkedItem = navigationView.getCheckedItem();
+            if (checkedItem != null) {
+                int checkedItemId = checkedItem.getItemId();
+                outState.putInt(CHECKED_DRAWER_ITEM, checkedItemId);
+            }
+        }
         super.onSaveInstanceState(outState);
     }
 

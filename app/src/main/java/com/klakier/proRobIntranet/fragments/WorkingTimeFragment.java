@@ -48,13 +48,26 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_sync: {
-                SyncTask syncTask = new SyncTask(mContext);
+                SyncTask syncTask = new SyncTask(mContext, new SyncTask.SyncTaskListener() {
+                    @Override
+                    public void onResult() {
+                        refreshList();
+                    }
+                });
                 syncTask.execute();
                 return true;
             }
             default: {
                 return super.onOptionsItemSelected(item);
             }
+        }
+    }
+
+    public void refreshList() {
+        if (mTimeSheetViewAdapter != null) {
+            mListTsr.clear();
+            mListTsr.addAll(new DBProRob(mContext, null).readTimesheetWithoutMarkedForDelete());
+            mTimeSheetViewAdapter.notifyDataSetChanged();
         }
     }
 
@@ -83,7 +96,7 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                         long id = new DBProRob(mContext, null).writeTimesheet(timesheetRow);
                         if (id != -1) {
                             //if added to local DB without error, add also to adapter and notify
-                            //set IDlocal if added to localDB
+                            //set ID local if added to localDB
                             timesheetRow.setIdLocal((int) id);
                             mListTsr.add(timesheetRow);
                             mTimeSheetViewAdapter.notifyItemInserted(mListTsr.size());
@@ -96,7 +109,6 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
         return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
     public void onAction(String action) {
         if (mListener != null) {
             mListener.onFragmentInteraction(action);

@@ -18,7 +18,7 @@ public class RetrofitClient {
 
     private static final String BASE_URL = "http://prorob-intranet-api.herokuapp.com/";
     private static final String BASE_URL_LOCAL = "http://10.0.2.2:80/prorob-intranet-api/public/";
-    //private static final String BASE_URL_LOCAL = "http://localhost/prorob-intranet-api/public/";
+
     private static RetrofitClient mInstance;
     private Retrofit retrofit;
 
@@ -31,7 +31,7 @@ public class RetrofitClient {
                 .create();
 
         retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL_LOCAL)
+                .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
     }

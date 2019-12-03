@@ -30,31 +30,36 @@ public class SyncTask extends AsyncTask<Void, Void, Void> {
     private static final String DB_SYNC_ERROR = "dbOpsSyncError";
 
     private Context mContext;
-    private ProgressDialog dialog;
+    private Context mAplicationContext;
+    private ProgressDialog mDialog;
+    private SyncTaskListener mSyncTaskListener;
 
-    public SyncTask(Context context) {
+
+    public SyncTask(Context context, SyncTaskListener syncTaskListener) {
         super();
         mContext = context;
-        dialog = new ProgressDialog(mContext);
+        mAplicationContext = context.getApplicationContext();
+        mDialog = new ProgressDialog(mContext);
+        mSyncTaskListener = syncTaskListener;
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        dialog.setMessage("Synchronizacja baz danych");
-        dialog.setIndeterminate(false);
-        dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        dialog.setCancelable(false);
-        dialog.show();
+        mDialog.setMessage("Synchronizacja baz danych");
+        mDialog.setIndeterminate(false);
+        mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mDialog.setCancelable(false);
+        mDialog.show();
     }
 
     @Override
     protected Void doInBackground(Void... voids) {
 
-        Token token = new Token(mContext);
-        final DBProRob dbProRob = new DBProRob(mContext, null);
+        Token token = new Token(mAplicationContext);
+        final DBProRob dbProRob = new DBProRob(mAplicationContext, null);
 
-        GetTimesheetCall getTimesheetCall = new GetTimesheetCall(mContext, new Token(mContext));
+        GetTimesheetCall getTimesheetCall = new GetTimesheetCall(mAplicationContext, new Token(mAplicationContext));
         StandardResponse standardResponse = getTimesheetCall.execute();
         TimesheetResponse timesheetResponse;
         if (standardResponse instanceof TimesheetResponse)
@@ -129,6 +134,8 @@ public class SyncTask extends AsyncTask<Void, Void, Void> {
 
         //print summary
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Log.d(DB_SYNC, " ");
+            Log.d(DB_SYNC, " ******************  COMPARE SUMMARY ******************************");
             Log.d(DB_SYNC, "AddToLoc:" + addToLoc.size());
             addToLoc.forEach(new java.util.function.Consumer<TimesheetRow>() {
                 @Override
@@ -188,12 +195,13 @@ public class SyncTask extends AsyncTask<Void, Void, Void> {
         }
 
         //ADD LOC
-        dbProRob.writeTimesheets(addToLoc);
+        long retAddToLoc = dbProRob.writeTimesheets(addToLoc);
 
         //ADD EXT
+        long retAddToExt = 0;
         for (TimesheetRow ae : addToExt) {
             //call
-            InsertTimesheetRowCall insertTimesheetRowCall = new InsertTimesheetRowCall(mContext, token, ae);
+            InsertTimesheetRowCall insertTimesheetRowCall = new InsertTimesheetRowCall(mAplicationContext, token, ae);
             StandardResponse standardResponseITRC = insertTimesheetRowCall.execute();
             TimesheetRowInsertedResponse timesheetRowInsertedResponse;
             //if call is correct instance means response is successful
@@ -202,7 +210,7 @@ public class SyncTask extends AsyncTask<Void, Void, Void> {
                 //set id external for response
                 ae.setIdExternal(timesheetRowInsertedResponse.getId());
                 //update tsr with id external in locDB
-                dbProRob.updateTimesheetRow(ae);
+                retAddToExt += dbProRob.updateTimesheetRow(ae);
             } else {
                 Log.d(DB_SYNC_ERROR, ae.toString() + " " + standardResponseITRC.toString());
                 continue;
@@ -210,15 +218,16 @@ public class SyncTask extends AsyncTask<Void, Void, Void> {
         }
 
         //DEL LOC
-        dbProRob.deleteTimesheetRows(deleteFromLoc);
+        long retDelFromLoc = dbProRob.deleteTimesheetRows(deleteFromLoc);
 
         //DEL EXT
+        long retDelFromExt = 0;
         for (TimesheetRow de : deleteFromExt) {
-            DeleteTimesheetRowCall deleteTimesheetRowCall = new DeleteTimesheetRowCall(mContext, token, abs(de.getIdExternal()));
+            DeleteTimesheetRowCall deleteTimesheetRowCall = new DeleteTimesheetRowCall(mAplicationContext, token, abs(de.getIdExternal()));
             StandardResponse standardResponseDTRC = deleteTimesheetRowCall.execute();
             if (!standardResponseDTRC.getError()) {
                 //delete from locDB
-                dbProRob.deleteTimesheetRow(de.getIdLocal());
+                retDelFromExt += dbProRob.deleteTimesheetRow(de.getIdLocal());
             } else {
                 Log.d(DB_SYNC_ERROR, de.toString() + " " + standardResponseDTRC.toString());
                 continue;
@@ -226,18 +235,30 @@ public class SyncTask extends AsyncTask<Void, Void, Void> {
         }
 
         //UPDATE LOC
-        dbProRob.updateTimesheetRows(newerInExt);
+        long retNewerInExt = dbProRob.updateTimesheetRows(newerInExt);
 
         //UPDATE EXT
+        long retNewerInLoc = 0;
         for (TimesheetRow nl : newerInLoc) {
-            UpdateTimesheetCall updateTimesheetCall = new UpdateTimesheetCall(mContext, token, nl);
+            UpdateTimesheetCall updateTimesheetCall = new UpdateTimesheetCall(mAplicationContext, token, nl);
             StandardResponse standardResponseUTC = updateTimesheetCall.execute();
             if (!standardResponseUTC.getError()) {
+                retNewerInLoc++;
             } else {
                 Log.d(DB_SYNC_ERROR, nl.toString() + " " + standardResponseUTC.toString());
                 continue;
             }
         }
+
+        //Sync summary
+        Log.d(DB_SYNC, " ******************  SYNC SUMMARY *********************************");
+        Log.d(DB_SYNC, "List addToLoc size:      " + addToLoc.size() + " -> " + retAddToLoc);
+        Log.d(DB_SYNC, "List addToExt size:      " + addToExt.size() + " -> " + retAddToExt);
+        Log.d(DB_SYNC, "List deleteFromLoc size: " + deleteFromLoc.size() + " -> " + retDelFromLoc);
+        Log.d(DB_SYNC, "List deleteFromExt size: " + deleteFromExt.size() + " -> " + retDelFromExt);
+        Log.d(DB_SYNC, "List newerInExt size:    " + newerInExt.size() + " -> " + retNewerInExt);
+        Log.d(DB_SYNC, "List newerInLoc size:    " + newerInLoc.size() + " -> " + retNewerInLoc);
+
 
         return null;
     }
@@ -245,11 +266,16 @@ public class SyncTask extends AsyncTask<Void, Void, Void> {
     @Override
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
-        dialog.dismiss();
+        mSyncTaskListener.onResult();
+        mDialog.dismiss();
     }
 
     @Override
     protected void onProgressUpdate(Void... values) {
         super.onProgressUpdate(values);
+    }
+
+    public interface SyncTaskListener {
+        void onResult();
     }
 }
