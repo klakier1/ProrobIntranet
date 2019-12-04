@@ -1,6 +1,7 @@
 package com.klakier.proRobIntranet;
 
 import android.support.annotation.NonNull;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,8 +27,7 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdap
     public TimeSheetRowViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         LayoutInflater layoutInflater = LayoutInflater.from(viewGroup.getContext());
         View listItem = layoutInflater.inflate(R.layout.timesheet_item, viewGroup, false);
-        TimeSheetRowViewHolder viewHolder = new TimeSheetRowViewHolder(listItem, mOnTimeSheetItemListener);
-        return viewHolder;
+        return new TimeSheetRowViewHolder(listItem, mOnTimeSheetItemListener);
     }
 
     @Override
@@ -56,6 +56,7 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdap
 
     public class TimeSheetRowViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+        public CardView cardViewTimesheetItem;
         public TextView textViewDate;
         public TextView textViewFrom;
         public TextView textViewTo;
@@ -70,6 +71,7 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdap
 
         public TimeSheetRowViewHolder(@NonNull View itemView, OnTimeSheetItemListener onTimeSheetItemListener) {
             super(itemView);
+            cardViewTimesheetItem = itemView.findViewById(R.id.cardViewTimesheetItem);
             textViewDate = itemView.findViewById(R.id.textViewDate);
             textViewFrom = itemView.findViewById(R.id.textViewFrom);
             textViewTo = itemView.findViewById(R.id.textViewTo);

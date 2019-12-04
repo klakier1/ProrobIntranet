@@ -13,6 +13,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.annimon.stream.Stream;
 import com.klakier.proRobIntranet.R;
@@ -52,6 +53,19 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                     @Override
                     public void onResult() {
                         refreshList();
+                    }
+
+                    @Override
+                    public void onUpdate(SyncTask.UpdateState updateState) {
+                        switch (updateState.getTag()) {
+                            case SyncTask.PROGRESS_TAG_TOAST: {
+                                Toast.makeText(mContext, updateState.getMessage(), Toast.LENGTH_LONG).show();
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
                     }
                 });
                 syncTask.execute();
