@@ -42,7 +42,7 @@ import com.klakier.proRobIntranet.fragments.DelegationFragment;
 import com.klakier.proRobIntranet.fragments.HolidaysFragment;
 import com.klakier.proRobIntranet.fragments.HomeFragment;
 import com.klakier.proRobIntranet.fragments.OnFragmentInteractionListener;
-import com.klakier.proRobIntranet.fragments.SigninFragment;
+import com.klakier.proRobIntranet.fragments.SignInFragment;
 import com.klakier.proRobIntranet.fragments.TeamFragment;
 import com.klakier.proRobIntranet.fragments.WorkingTimeFragment;
 
@@ -61,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String DB_DELETED_IN_LOC_TO_EXT_TAG = "dbOpsDeletedInLocToExt";
     private static final String DB_UPDATES_TAG = "dbOpsUpdates";
 
+    private static final String PROROB_INTRANET_TAG = "prorobIntranetTag";
+
+
     private static final String START = "***************** Start ***************************";
     private static final String CALL_ENQUEUE = "Call enqueue";
     private static final String SUCCESS = "Success -> ";
@@ -74,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String DELEGATION_FRAGMENT_TAG = "delegationFragment";
     private static final String HOLIDAYS_FRAGMENT_TAG = "holidaysFragment";
     private static final String TEAM_FRAGMENT_TAG = "teamFragment";
-    private SigninFragment signinFragment;
+    private SignInFragment signinFragment;
 
     private FragmentManager fragmentManager;
     private NavigationView navigationView;
@@ -88,9 +91,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onFragmentInteraction(String action) {
-        Toast.makeText(this, "Action: " + action, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Action: " + action, Toast.LENGTH_SHORT).show();
+        Log.d(PROROB_INTRANET_TAG, "Action: " + action);
         switch (action) {
-            case SigninFragment.SIGN_IN_ACTION: {
+            case SignInFragment.SIGN_IN_ACTION: {
                 signIn();
                 break;
             }
@@ -207,7 +211,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setDrawerEnabled(true);
 
         if (mCheckedItem != 0) {
-            navigationView.setCheckedItem(mCheckedItem);
+            MenuItem checkedMenuItem = navigationView.getCheckedItem();
+            int checkedMenuItemId = checkedMenuItem != null ? checkedMenuItem.getItemId() : 0;
+            if (mCheckedItem == checkedMenuItemId) {
+                onNavigationItemSelected(checkedMenuItem);
+            } else {
+                navigationView.setCheckedItem(mCheckedItem);
+            }
         } else {
             MenuItem menuItem = navigationMenu.findItem(R.id.nav_home);
             menuItem.setChecked(true);
@@ -225,9 +235,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         syncDrawerWithDB();
         setDrawerEnabled(false);
 
-        signinFragment = (SigninFragment) fragmentManager.findFragmentByTag(SIGN_IN_FRAGMENT_TAG);
+        signinFragment = (SignInFragment) fragmentManager.findFragmentByTag(SIGN_IN_FRAGMENT_TAG);
         if (signinFragment == null) {
-            signinFragment = new SigninFragment();
+            signinFragment = new SignInFragment();
         }
 
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -238,8 +248,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+//        getMenuInflater().inflate(R.menu.menu_main, menu);
+//        return true;
+        return false;
     }
 
     @Override
@@ -568,6 +579,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } catch (Exception e) {
             e.printStackTrace();
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 

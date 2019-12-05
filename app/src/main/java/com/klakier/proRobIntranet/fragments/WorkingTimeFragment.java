@@ -18,6 +18,11 @@ import android.widget.Toast;
 import com.annimon.stream.Stream;
 import com.klakier.proRobIntranet.R;
 import com.klakier.proRobIntranet.TimeSheetViewAdapter;
+import com.klakier.proRobIntranet.Token;
+import com.klakier.proRobIntranet.api.call.GetObjectivesCall;
+import com.klakier.proRobIntranet.api.call.OnResponseListener;
+import com.klakier.proRobIntranet.api.response.ObjectivesResponse;
+import com.klakier.proRobIntranet.api.response.StandardResponse;
 import com.klakier.proRobIntranet.api.response.TimesheetRow;
 import com.klakier.proRobIntranet.database.DBProRob;
 import com.klakier.proRobIntranet.database.SyncTask;
@@ -69,6 +74,23 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                     }
                 });
                 syncTask.execute();
+                return true;
+            }
+            case R.id.action_get_objectives: {
+                new GetObjectivesCall(mContext, new Token(mContext)).enqueue(new OnResponseListener() {
+                    @Override
+                    public void onSuccess(StandardResponse response) {
+                        DBProRob dbProRob = new DBProRob(mContext, null);
+                        long i = dbProRob.clearObjectives();
+                        dbProRob.writeObjectives(((ObjectivesResponse) response).getData());
+                        Toast.makeText(mContext, response.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+
+                    @Override
+                    public void onFailure(StandardResponse response) {
+                        Toast.makeText(mContext, response.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
                 return true;
             }
             default: {

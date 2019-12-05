@@ -10,6 +10,7 @@
     <string name="action_test5">Check updates</string>
 
     <string name="action_sync">Synchrozniuj</string>
+    <string name="action_get_objectives">Aktualizuj liste celów</string>
 
     <!-- content_main -->
     <string name="textViewLoginUser">Login</string>
@@ -17,7 +18,7 @@
     <string name="buttonLogIn">Zaloguj</string>
 
     <!-- toast -->
-    <string name="error_retrofit_msg">Serwer nie odpowiada, sprawdź połączenie internetowy i ponów próbe</string>
+    <string name="error_retrofit_msg">Serwer nie odpowiada, sprawdź połączenie internetowe i spróbuj ponownie</string>
     <string name="title_activity_main2">Main2Activity</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

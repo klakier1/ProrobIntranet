@@ -25,7 +25,7 @@ import com.klakier.proRobIntranet.api.response.UserDataShort;
 import com.klakier.proRobIntranet.api.response.UserDataShortResponse;
 import com.klakier.proRobIntranet.database.DBProRob;
 
-public class SigninFragment extends Fragment {
+public class SignInFragment extends Fragment {
 
     public static final String SIGN_IN_ACTION = "signInAction";
 
@@ -36,7 +36,7 @@ public class SigninFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    public SigninFragment() {
+    public SignInFragment() {
         setHasOptionsMenu(false);
     }
 
@@ -78,8 +78,8 @@ public class SigninFragment extends Fragment {
             //hide keyboard and click button on enter
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                    buttonLogIn.performClick();
+                if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_UP) {
+                    startSignIn();
 
                     InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(editTextPasswordUser.getWindowToken(), 0);
@@ -92,63 +92,70 @@ public class SigninFragment extends Fragment {
         buttonLogIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                //disable login button
-                buttonLogIn.setEnabled(false);
-                //get login and password from editText
-                String userLogin = editTextLoginUser.getText().toString().trim();
-                String userPassword = editTextPasswordUser.getText().toString().trim();
-
-                LoginCall loginCall = new LoginCall(context, userLogin, userPassword);
-                loginCall.enqueue(new OnResponseListener() {
-                    @Override
-                    public void onSuccess(StandardResponse response) {
-                        //cast response to tokenResponse
-                        TokenResponse tokenResponse = (TokenResponse) response;
-                        //get token to preferences
-                        Token token = new Token(context);
-                        token.setToken(tokenResponse.getToken());
-
-                        //get userDara to DB
-                        GetUserShortDataCall getUserShortDataCall = new GetUserShortDataCall(context, token);
-                        getUserShortDataCall.enqueue(new OnResponseListener() {
-                            @Override
-                            public void onSuccess(StandardResponse response) {
-                                //cast response to userDataShortResponse
-                                UserDataShortResponse userDataShortResponse = (UserDataShortResponse) response;
-                                //get first user, response should have one user anyway
-                                UserDataShort userDataShort = userDataShortResponse.getData().get(0);
-                                //get DB
-                                DBProRob dbProRob = new DBProRob(context, null);
-                                dbProRob.setUser(userDataShort);
-                                //inform mainActivity to change fragment
-                                onAction(SIGN_IN_ACTION);
-                            }
-
-                            @Override
-                            public void onFailure(StandardResponse response) {
-                                Toast.makeText(context, response.getMessage(), Toast.LENGTH_LONG).show();
-                                //unset token
-                                new Token(context).resetToken();
-                                //enable login button
-                                buttonLogIn.setEnabled(true);
-                            }
-                        });
-
-                    }
-
-                    @Override
-                    public void onFailure(StandardResponse response) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_LONG).show();
-                        //enable login button
-                        buttonLogIn.setEnabled(true);
-                    }
-                });
+                startSignIn();
             }
         });
 
         return v;
     }
 
+    private void startSignIn() {
+        //disable login button
+        buttonLogIn.setEnabled(false);
+        //get login and password from editText
+        String userLogin = editTextLoginUser.getText().toString().trim();
+        String userPassword = editTextPasswordUser.getText().toString().trim();
+
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(editTextPasswordUser.getWindowToken(), 0);
+
+        LoginCall loginCall = new LoginCall(context, userLogin, userPassword);
+        loginCall.enqueue(new OnResponseListener() {
+            @Override
+            public void onSuccess(StandardResponse response) {
+                //cast response to tokenResponse
+                TokenResponse tokenResponse = (TokenResponse) response;
+                //get token to preferences
+                Token token = new Token(context);
+                token.setToken(tokenResponse.getToken());
+
+                //get userDara to DB
+                GetUserShortDataCall getUserShortDataCall = new GetUserShortDataCall(context, token);
+                getUserShortDataCall.enqueue(new OnResponseListener() {
+                    @Override
+                    public void onSuccess(StandardResponse response) {
+                        //cast response to userDataShortResponse
+                        UserDataShortResponse userDataShortResponse = (UserDataShortResponse) response;
+                        //get first user, response should have one user anyway
+                        UserDataShort userDataShort = userDataShortResponse.getData().get(0);
+                        //get DB
+                        DBProRob dbProRob = new DBProRob(context, null);
+                        dbProRob.setUser(userDataShort);
+                        //inform mainActivity to change fragment
+                        buttonLogIn.setEnabled(true);
+                        onAction(SIGN_IN_ACTION);
+                    }
+
+                    @Override
+                    public void onFailure(StandardResponse response) {
+                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_LONG).show();
+                        //unset token
+                        new Token(context).resetToken();
+                        //enable login button
+                        buttonLogIn.setEnabled(true);
+                    }
+                });
+
+            }
+
+            @Override
+            public void onFailure(StandardResponse response) {
+                Toast.makeText(context, response.getMessage(), Toast.LENGTH_LONG).show();
+                //enable login button
+                buttonLogIn.setEnabled(true);
+            }
+        });
+
+    }
 
 }

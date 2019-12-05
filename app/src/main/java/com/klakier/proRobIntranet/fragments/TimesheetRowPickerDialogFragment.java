@@ -136,7 +136,7 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         projects = new ArrayList<String>();
         projects.add("");
         projects.addAll(new DBProRob(getContext(), null).readObjectives());
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, projects);
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, projects);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         //PROJECT SPINNER
