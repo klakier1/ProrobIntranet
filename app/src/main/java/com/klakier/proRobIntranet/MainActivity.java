@@ -1,14 +1,23 @@
 package com.klakier.proRobIntranet;
 
+import android.Manifest;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.transition.TransitionManager;
@@ -46,13 +55,17 @@ import com.klakier.proRobIntranet.fragments.SignInFragment;
 import com.klakier.proRobIntranet.fragments.TeamFragment;
 import com.klakier.proRobIntranet.fragments.WorkingTimeFragment;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Math.abs;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, OnFragmentInteractionListener {
-
 
     //DEBUG TAGS ************************
     private static final String DB_ADD_FROM_EXT_TO_LOC_TAG = "dbOpsAddFromExtToLoc";
@@ -63,13 +76,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private static final String PROROB_INTRANET_TAG = "prorobIntranetTag";
 
-
     private static final String START = "***************** Start ***************************";
     private static final String CALL_ENQUEUE = "Call enqueue";
     private static final String SUCCESS = "Success -> ";
     private static final String FAILED = "Failed -> ";
     //***********************************
     private static final String CHECKED_DRAWER_ITEM = "checkedDrawerItem";
+
+    private static final int WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 186;
 
     private static final String SIGN_IN_FRAGMENT_TAG = "signInFragment";
     private static final String HOME_FRAGMENT_TAG = "homeFragment";
@@ -114,10 +128,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         View v = getLayoutInflater().inflate(R.layout.activity_main, null, false);
         setContentView(v);
 
+        checkPermissions();
+
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                Writer writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+                String s = writer.toString();
+                sendLogcatMail(s);
+            }
+        });
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 2);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+            }
+        }
+
         findViews();
 
         setSupportActionBar(toolbar);
-
 
         toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -135,6 +168,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             signIn();
         } else {
             logOut();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case WRITE_EXTERNAL_STORAGE_REQUEST_CODE: {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Permission not granted", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
         }
     }
 
@@ -195,7 +242,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            int count = getSupportFragmentManager().getBackStackEntryCount();//User that use android library should use getFragmentManager()
+            if (count == 0) {
+                new AlertDialog.Builder(this)
+                        .setMessage(getString(R.string.closing_app_msg))
+                        .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                        .setNegativeButton(getString(R.string.no), null)
+                        .show();
+            } else {
+                super.onBackPressed();
+            }
         }
     }
 
@@ -449,9 +510,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             return;
                         }
 
-                        final List<TimesheetRow> newerExt = new ArrayList<TimesheetRow>();
-                        final List<TimesheetRow> newerLoc = new ArrayList<TimesheetRow>();
-                        final List<TimesheetRow> equals = new ArrayList<TimesheetRow>();
+                        final List<TimesheetRow> newerExt = new ArrayList<>();
+                        final List<TimesheetRow> newerLoc = new ArrayList<>();
+                        final List<TimesheetRow> equals = new ArrayList<>();
                         final List<TimesheetRow> notEquals = new ArrayList<>();
 
                         Stream.of(tsrLocDb).forEach(new Consumer<TimesheetRow>() {
@@ -581,6 +642,57 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             e.printStackTrace();
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void checkPermissions() {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M &&
+                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
+        }
+    }
+
+    public void sendLogcatMail(String message) {
+
+        //let it ignore the URI Exposure
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
+
+        // save logcat in file
+        File outputFile = new File(getExternalCacheDir(),
+                "logcat.txt");
+
+        try {
+            Runtime.getRuntime().exec(
+                    "logcat -f " + outputFile.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        int version = Build.VERSION.SDK_INT;
+        String versionRelease = Build.VERSION.RELEASE;
+
+        String phoneInfo = "manufacturer " + manufacturer
+                + " \n model " + model
+                + " \n version " + version
+                + " \n versionRelease " + versionRelease + "\n\n";
+
+        //send file using email
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        //set type to "email"
+        emailIntent.setType("text/plain");
+        //emailIntent.setType("vnd.android.cursor.dir/email");
+        String[] to = {"lukasz.paleczek@gmail.com"};
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, to);
+        //the attachment
+        emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(outputFile));
+        //the mail subject
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Pro-rob intranet logs");
+        emailIntent.putExtra(Intent.EXTRA_TEXT, phoneInfo + message);
+        startActivity(Intent.createChooser(emailIntent, "Send logs to developer"));
+
+        System.exit(2);
     }
 
 }

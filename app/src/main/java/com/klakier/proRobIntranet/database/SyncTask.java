@@ -72,7 +72,7 @@ public class SyncTask extends AsyncTask<Void, SyncTask.UpdateState, Void> {
         } else return null;
         StandardResponse standardResponse = getTimesheetCall.execute();
         TimesheetResponse timesheetResponse;
-        if (standardResponse instanceof TimesheetResponse)
+        if (standardResponse instanceof TimesheetResponse && !standardResponse.getError())
             timesheetResponse = (TimesheetResponse) standardResponse;
         else {
             Log.d(DB_SYNC, standardResponse.toString());
@@ -80,8 +80,11 @@ public class SyncTask extends AsyncTask<Void, SyncTask.UpdateState, Void> {
             return null;
         }
 
-        final List<TimesheetRow> tsrExt = timesheetResponse.getData();
+        final List<TimesheetRow> tsrExt = new ArrayList<>();
+        if (timesheetResponse.getDataLength() > 0)
+            tsrExt.addAll(timesheetResponse.getData());
         final List<TimesheetRow> tsrLoc = dbProRob.readTimesheet();
+
 
         final List<TimesheetRow> addToLoc = new ArrayList<>();
         final List<TimesheetRow> addToExt = new ArrayList<>();
@@ -313,7 +316,7 @@ public class SyncTask extends AsyncTask<Void, SyncTask.UpdateState, Void> {
         private String tag;
         private String message;
 
-        public UpdateState(String tag, String message) {
+        private UpdateState(String tag, String message) {
             this.tag = tag;
             this.message = message;
         }
