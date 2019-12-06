@@ -140,6 +140,5 @@
             app:layout_constraintStart_toEndOf="@+id/textViewFrom"
             app:layout_constraintTop_toTopOf="@+id/textViewFrom" />
 
-
     </android.support.constraint.ConstraintLayout>
 </android.support.v7.widget.CardView>
