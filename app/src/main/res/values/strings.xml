@@ -53,9 +53,11 @@
 
 
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- example texts -->
     <string name="example_text_ids">Id:10 IdExt:11 User:12</string>
-    <string name="example_text_timestamp">2019–10-22 21:01:15.417645</string>
-    <string name="example_text_date1">2019-10-14</string>
+    <string name="example_text_timestamp">2019–10–22 21:01:15.417645</string>
+    <string name="example_text_date1">2019–10–14</string>
     <string name="example_text_hour1">08:00:00</string>
     <string name="example_text_hour2">17:00:00</string>
     <string name="example_text_project">Opel Zaragoza, Corsa</string>
