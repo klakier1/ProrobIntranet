@@ -36,6 +36,11 @@ public interface ProRobApi {
             @Header("Authorization") String authorization
     );
 
+    @GET("api/user/")
+    Call<UserDataShortResponse> getAllUsersShort(
+            @Header("Authorization") String authorization
+    );
+
     @GET("api/timesheet/user_id/{user_id}")
     Call<TimesheetResponse> getTimesheet(
             @Path("user_id") int user,

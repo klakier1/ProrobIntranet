@@ -21,13 +21,14 @@ import java.util.List;
 
 public class DBProRob extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 7;
+    private static final int DATABASE_VERSION = 8;
     private static final String DATABASE_NAME = "prorob.db";
     //tables names
     private static final String TABLE_CURRENT_USER = "currentUser";
     private static final String TABLE_TIMESHEET = "timesheet";
     private static final String TABLE_OBJECTIVES = "objectives";
-    //column names currentUser
+    private static final String TABLE_TEAM = "team";
+    //column names currentUser and team
     private static final String COL_ID = "id";
     private static final String COL_EMAIL = "email";
     private static final String COL_AVATAR_FILE_NAME = "avatarFileName";
@@ -93,6 +94,19 @@ public class DBProRob extends SQLiteOpenHelper {
             COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE," +
             COL_OBJECTIVE + " TEXT" +
             ");";
+    private static final String CREATE_TEAM_TABLE = "CREATE TABLE " + TABLE_TEAM + "(" +
+            COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE," +
+            COL_EMAIL + " TEXT," +
+            COL_AVATAR_FILE_NAME + " TEXT," +
+            COL_AVATAR_CONTENT_TYPE + " TEXT," +
+            COL_AVATAR_FILE_SIZE + " INTEGER," +
+            COL_ROLE + " TEXT," +
+            COL_ACTIVE + " BOOLEAN," +
+            COL_FIRST_NAME + " TEXT," +
+            COL_LAST_NAME + " TEXT," +
+            COL_TITLE + " TEXT," +
+            COL_PHONE + " TEXT" +
+            ");";
     private Context mContext;
 
     public DBProRob(Context context, SQLiteDatabase.CursorFactory factory) {
@@ -105,6 +119,7 @@ public class DBProRob extends SQLiteOpenHelper {
         db.execSQL(CREATE_USER_TABLE);
         db.execSQL(CREATE_TIMESHEET_TABLE);
         db.execSQL(CREATE_OBJECTIVES_TABLE);
+        db.execSQL(CREATE_TEAM_TABLE);
     }
 
     @Override
@@ -112,10 +127,11 @@ public class DBProRob extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_CURRENT_USER + ";");
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TIMESHEET + ";");
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_OBJECTIVES + ";");
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TEAM + ";");
         onCreate(db);
     }
 
-    //USER TABLE FUNCTIONS ******************************************
+    //region USER TABLE FUNCTIONS ******************************************
     public void resetUser() {
         SQLiteDatabase db = getWritableDatabase();
         db.delete(TABLE_CURRENT_USER, null, null);
@@ -144,7 +160,6 @@ public class DBProRob extends SQLiteOpenHelper {
                     c.getString(c.getColumnIndex(COL_PHONE))
             );
         }
-
         db.close();
         c.close();
         return user;
@@ -180,8 +195,9 @@ public class DBProRob extends SQLiteOpenHelper {
         c.close();
         return ret;
     }
+    // endregion
 
-    //TIMESHEET TABLE FUNCTIONS ************************************
+    // region TIMESHEET TABLE FUNCTIONS *************************************
     public long writeTimesheet(TimesheetRow tsr) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_ID_EXTERNAL, tsr.getIdExternal());
@@ -397,8 +413,9 @@ public class DBProRob extends SQLiteOpenHelper {
         }
         return filtered;
     }
+    // endregion**
 
-    //OBJECTIVES TABLE FUNCTIONS ************************************
+    // region OBJECTIVES TABLE FUNCTIONS ************************************
     public List<String> readObjectives() {
         SQLiteDatabase db = getReadableDatabase();
         String query = "SELECT * FROM " + TABLE_OBJECTIVES;
@@ -443,4 +460,17 @@ public class DBProRob extends SQLiteOpenHelper {
         db.close();
         return ret;
     }
+
+    // endregion
+
+    // region TEAM TABLE FUNCTIONS ******************************************
+
+    public long clearTeam() {
+        SQLiteDatabase db = getWritableDatabase();
+        long ret = db.delete(TABLE_TEAM, null, null);
+        db.close();
+        return ret;
+    }
+
+    // endregion
 }

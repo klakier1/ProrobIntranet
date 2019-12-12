@@ -21,12 +21,6 @@
 
     <!-- toast -->
     <string name="error_retrofit_msg">Serwer nie odpowiada, sprawdź połączenie internetowe i spróbuj ponownie</string>
-    <string name="title_activity_main2">Main2Activity</string>
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
-    <string name="nav_header_desc">Navigation header</string>
 
     <!-- menu drawer -->
     <string name="menu_home">Strona główna</string>
@@ -40,6 +34,12 @@
     <string name="menu_tools">Tools</string>
     <string name="menu_share">Share</string>
     <string name="menu_send">Send</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
 
     <!-- closing dialog -->
     <string name="closing_app_msg">Czy chcesz zamknąć aplikację</string>
@@ -60,6 +60,11 @@
     <string name="example_text_hour3">00:15</string>
     <string name="example_text_comment">Comment</string>
 
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!-- user item-->
+    <string name="imageView_user_content_descriptor" />
+    <string name="example_text_full_name">Imie i Nazwisko</string>
+    <string name="example_text_title">Tytuł, stanowisko itp</string>
+    <string name="example_text_phone">0 800 666 666</string>
+    <string name="example_text_email">blebleble@bleble.com</string>
 
 </resources>

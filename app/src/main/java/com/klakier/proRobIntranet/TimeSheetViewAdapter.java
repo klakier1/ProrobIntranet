@@ -14,8 +14,8 @@ import java.util.List;
 
 public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdapter.TimeSheetRowViewHolder> {
 
-    List<TimesheetRow> mList;
-    OnTimeSheetItemListener mOnTimeSheetItemListener;
+    private List<TimesheetRow> mList;
+    private OnTimeSheetItemListener mOnTimeSheetItemListener;
 
     public TimeSheetViewAdapter(List<TimesheetRow> mList, OnTimeSheetItemListener onTimeSheetItemListener) {
         this.mList = mList;
@@ -39,7 +39,7 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdap
         timeSheetRowView.textViewCustomerBreak.setText(tsr.getCustomerBreak().toString());
         timeSheetRowView.textViewStatutoryBreak.setText(tsr.getStatutoryBreak().toString());
         timeSheetRowView.textViewComment.setText(tsr.getComments());
-        timeSheetRowView.textViewUserID.setText("Id:" + tsr.getIdLocal().toString() + "  IdExt:" + tsr.getIdExternal().toString() + "  IdUser:" + tsr.getUserId().toString());
+        timeSheetRowView.textViewUserID.setText(String.format("Id:%s  IdExt:%s  IdUser:%s", tsr.getIdLocal().toString(), tsr.getIdExternal().toString(), tsr.getUserId().toString()));
         timeSheetRowView.textViewCreatedAt.setText(tsr.getCreatedAt().toString());
         timeSheetRowView.textViewUpdatedAt.setText(tsr.getUpdatedAt().toString());
         timeSheetRowView.textViewProjectName.setText(tsr.getProject());
@@ -56,20 +56,20 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<TimeSheetViewAdap
 
     public class TimeSheetRowViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public CardView cardViewTimesheetItem;
-        public TextView textViewDate;
-        public TextView textViewFrom;
-        public TextView textViewTo;
-        public TextView textViewProjectName;
-        public TextView textViewStatutoryBreak;
-        public TextView textViewCustomerBreak;
-        public TextView textViewComment;
-        public TextView textViewUserID;
-        public TextView textViewCreatedAt;
-        public TextView textViewUpdatedAt;
-        private OnTimeSheetItemListener onTimeSheetItemListener;
+        CardView cardViewTimesheetItem;
+        TextView textViewDate;
+        TextView textViewFrom;
+        TextView textViewTo;
+        TextView textViewProjectName;
+        TextView textViewStatutoryBreak;
+        TextView textViewCustomerBreak;
+        TextView textViewComment;
+        TextView textViewUserID;
+        TextView textViewCreatedAt;
+        TextView textViewUpdatedAt;
+        OnTimeSheetItemListener onTimeSheetItemListener;
 
-        public TimeSheetRowViewHolder(@NonNull View itemView, OnTimeSheetItemListener onTimeSheetItemListener) {
+        TimeSheetRowViewHolder(@NonNull View itemView, OnTimeSheetItemListener onTimeSheetItemListener) {
             super(itemView);
             cardViewTimesheetItem = itemView.findViewById(R.id.cardViewTimesheetItem);
             textViewDate = itemView.findViewById(R.id.textViewDate);
