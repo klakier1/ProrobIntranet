@@ -233,7 +233,7 @@ public class DBProRob extends SQLiteOpenHelper {
         return ret;
     }
 
-    private TimesheetRow getTimesheetRow(Cursor c) {
+    private TimesheetRow getTimesheetRowFromCursor(Cursor c) {
         TimesheetRow tsr = new TimesheetRow(
                 c.getInt(c.getColumnIndex(COL_ID_EXTERNAL)),
                 c.getInt(c.getColumnIndex(COL_ID_USER)),
@@ -262,7 +262,7 @@ public class DBProRob extends SQLiteOpenHelper {
         List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
 
         while (c.moveToNext()) {
-            ltsr.add(getTimesheetRow(c));
+            ltsr.add(getTimesheetRowFromCursor(c));
         }
 
         db.close();
@@ -281,7 +281,7 @@ public class DBProRob extends SQLiteOpenHelper {
         List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
 
         while (c.moveToNext()) {
-            ltsr.add(getTimesheetRow(c));
+            ltsr.add(getTimesheetRowFromCursor(c));
         }
 
         db.close();
@@ -301,7 +301,7 @@ public class DBProRob extends SQLiteOpenHelper {
         List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
 
         while (c.moveToNext()) {
-            ltsr.add(getTimesheetRow(c));
+            ltsr.add(getTimesheetRowFromCursor(c));
         }
 
         db.close();
@@ -320,7 +320,7 @@ public class DBProRob extends SQLiteOpenHelper {
         List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
 
         while (c.moveToNext()) {
-            ltsr.add(getTimesheetRow(c));
+            ltsr.add(getTimesheetRowFromCursor(c));
         }
 
         db.close();
@@ -469,6 +469,70 @@ public class DBProRob extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         long ret = db.delete(TABLE_TEAM, null, null);
         db.close();
+        return ret;
+    }
+
+    private UserDataShort getUserFromCursor(Cursor c) {
+        UserDataShort user = new UserDataShort(
+                c.getString(c.getColumnIndex(COL_EMAIL)),
+                c.getString(c.getColumnIndex(COL_AVATAR_FILE_NAME)),
+                c.getString(c.getColumnIndex(COL_AVATAR_CONTENT_TYPE)),
+                c.getInt(c.getColumnIndex(COL_AVATAR_FILE_SIZE)),
+                c.getString(c.getColumnIndex(COL_ROLE)),
+                c.getInt(c.getColumnIndex(COL_ACTIVE)) == 1,
+                c.getString(c.getColumnIndex(COL_FIRST_NAME)),
+                c.getString(c.getColumnIndex(COL_LAST_NAME)),
+                c.getString(c.getColumnIndex(COL_TITLE)),
+                c.getString(c.getColumnIndex(COL_PHONE))
+        );
+        return user;
+    }
+
+    public List<UserDataShort> getTeam() {
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_TEAM;
+
+        Cursor c = db.rawQuery(query, null);
+        List<UserDataShort> team = null;
+
+        while (c.moveToNext()) {
+            team.add(getUserFromCursor(c));
+        }
+
+        db.close();
+        c.close();
+
+        return team;
+    }
+
+    private long setTeamMember(UserDataShort user) {
+        resetUser();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COL_EMAIL, user.getEmail());
+        contentValues.put(COL_AVATAR_FILE_NAME, user.getAvatarFileSize());
+        contentValues.put(COL_AVATAR_CONTENT_TYPE, user.getAvatarContentType());
+        contentValues.put(COL_AVATAR_FILE_SIZE, user.getAvatarFileSize());
+        contentValues.put(COL_ROLE, user.getRole());
+        contentValues.put(COL_ACTIVE, user.getActive());
+        contentValues.put(COL_FIRST_NAME, user.getFirstName());
+        contentValues.put(COL_LAST_NAME, user.getLastName());
+        contentValues.put(COL_TITLE, user.getTitle());
+        contentValues.put(COL_PHONE, user.getPhone());
+
+        SQLiteDatabase db = getWritableDatabase();
+        long ret = db.insert(TABLE_TEAM, null, contentValues);
+        db.close();
+        return ret;
+    }
+
+    public long setTeam(List<UserDataShort> team) {
+        long ret = 0;
+        for (UserDataShort teamMember : team) {
+            if (setTeamMember(teamMember) == 1)
+                ret++;
+            else
+                return -1;
+        }
         return ret;
     }
 
