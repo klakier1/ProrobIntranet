@@ -3,10 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.klakier.proRobIntranet.MainActivity">
     <item
-        android:id="@+id/action_sync"
-        android:icon="@drawable/ic_sync_white"
+        android:id="@+id/action_get_team"
+        android:icon="@drawable/ic_group_white_24dp"
         android:orderInCategory="100"
-        android:title="@string/action_sync"
+        android:title="@string/action_get_team"
         app:showAsAction="ifRoom" />
 
 </menu>

@@ -12,7 +12,10 @@
 
     <!-- menu working time fragment -->
     <string name="action_sync">Synchrozniuj</string>
-    <string name="action_get_objectives">Aktualizuj liste celów</string>
+    <string name="action_get_objectives">Aktualizuj listę celów</string>
+
+    <!-- menu team fragment -->
+    <string name="action_get_team">Aktualizuj listę pracowników</string>
 
     <!-- content_main -->
     <string name="textViewLoginUser">Login</string>
