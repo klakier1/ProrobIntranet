@@ -84,9 +84,13 @@ public class HomeFragment extends Fragment {
     private void fillTextViews() {
         DBProRob dbProRob = new DBProRob(context, null);
         UserDataShort user = dbProRob.getUser();
-        textViewInfo1.setText("Zalogowany jako: " + user.getFirstName() + " " + user.getLastName());
-        textViewInfo2.setText("Rola: " + user.getRole());
-        textViewInfo3.setText("Email: " + user.getEmail());
-        textViewInfo4.setText("Nr tel: " + user.getPhone());
+        if (user != null) {
+            textViewInfo1.setText(String.format("Zalogowany jako: %s %s", user.getFirstName(), user.getLastName()));
+            textViewInfo2.setText(String.format("Rola: %s", user.getRole()));
+            textViewInfo3.setText(String.format("Email: %s", user.getEmail()));
+            textViewInfo4.setText(String.format("Nr tel: %s", user.getPhone()));
+        } else {
+            onAction(LOGOUT_ACTION);
+        }
     }
 }

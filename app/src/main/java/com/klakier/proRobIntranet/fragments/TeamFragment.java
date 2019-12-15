@@ -20,6 +20,7 @@ import com.klakier.proRobIntranet.api.call.GetAllUsersShortDataCall;
 import com.klakier.proRobIntranet.api.call.OnResponseListener;
 import com.klakier.proRobIntranet.api.response.StandardResponse;
 import com.klakier.proRobIntranet.api.response.UserDataShort;
+import com.klakier.proRobIntranet.api.response.UserDataShortResponse;
 import com.klakier.proRobIntranet.database.DBProRob;
 
 import java.util.ArrayList;
@@ -46,6 +47,12 @@ public class TeamFragment extends Fragment {
                 new GetAllUsersShortDataCall(mContext, new Token(mContext)).enqueue(new OnResponseListener() {
                     @Override
                     public void onSuccess(StandardResponse response) {
+                        UserDataShortResponse teamResponse = (UserDataShortResponse) response;
+                        if (teamResponse.getDataLength() > 0) {
+                            DBProRob dbProRob = new DBProRob(mContext, null);
+                            long i = dbProRob.clearTeam();
+                            dbProRob.setTeam(teamResponse.getData());
+                        }
                         refreshList();
                     }
 
@@ -71,8 +78,11 @@ public class TeamFragment extends Fragment {
     public void refreshList() {
         if (mTeamViewAdapter != null) {
             mTeamList.clear();
-            mTeamList.addAll(new DBProRob(mContext, null).getTeam());
-            mTeamViewAdapter.notifyDataSetChanged();
+            List<UserDataShort> team = new DBProRob(mContext, null).getTeam();
+            if (team != null) {
+                mTeamList.addAll(team);
+                mTeamViewAdapter.notifyDataSetChanged();
+            }
         }
     }
 
@@ -82,11 +92,11 @@ public class TeamFragment extends Fragment {
 
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_team, container, false);
-        mTeamList.addAll(new DBProRob(mContext, null).getTeam());
         mTeamViewAdapter = new TeamViewAdapter(mTeamList);
         mRecyclerView = view.findViewById(R.id.recyclerViewTeam);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
         mRecyclerView.setAdapter(mTeamViewAdapter);
+        refreshList();
         return view;
     }
 

@@ -142,9 +142,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 2);
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 2);
             }
         }
 
@@ -164,10 +163,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             mCheckedItem = savedInstanceState.getInt(CHECKED_DRAWER_ITEM, 0);
         }
 
-        if (new Token(this).hasToken()) {
-            signIn();
-        } else {
+        Token token = new Token(this);
+        DBProRob dbProRob = new DBProRob(this, null);
+        if (!token.hasToken() || !dbProRob.hasUser()) {
             logOut();
+        } else {
+            signIn();
         }
     }
 
@@ -344,7 +345,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Toast.makeText(this, "Token not set", Toast.LENGTH_LONG).show();
                 return true;
             }
-
             case R.id.action_test: {
 
                 DBProRob dbProRob = new DBProRob(this, null);
@@ -355,7 +355,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Toast.makeText(this, "User not set", Toast.LENGTH_LONG).show();
                 return true;
             }
-
             case R.id.action_test1: {
                 Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, START);
                 GetTimesheetCall getTimesheetCall = new GetTimesheetCall(getApplicationContext(), new Token(getApplicationContext()));
@@ -383,7 +382,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Log.d(DB_ADD_FROM_EXT_TO_LOC_TAG, "Call enqueue");
                 return true;
             }
-
             case R.id.action_test2: {
                 Log.d(DB_ADD_FROM_LOC_TO_EXT_TAG, START);
                 final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
@@ -414,7 +412,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 return true;
             }
-
             case R.id.action_test3: {
                 Log.d(DB_DELETED_IN_LOC_TO_EXT_TAG, START);
                 final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);
@@ -444,7 +441,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Log.d(DB_DELETED_IN_LOC_TO_EXT_TAG, CALL_ENQUEUE);
                 return true;
             }
-
             case R.id.action_test4: {
                 Log.d(DB_DELETED_IN_EXT_TO_LOC_TAG, START);
                 final DBProRob dbProRob = new DBProRob(getApplicationContext(), null);

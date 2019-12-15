@@ -493,7 +493,7 @@ public class DBProRob extends SQLiteOpenHelper {
         String query = "SELECT * FROM " + TABLE_TEAM;
 
         Cursor c = db.rawQuery(query, null);
-        List<UserDataShort> team = null;
+        List<UserDataShort> team = new ArrayList<>();
 
         while (c.moveToNext()) {
             team.add(getUserFromCursor(c));
@@ -528,7 +528,7 @@ public class DBProRob extends SQLiteOpenHelper {
     public long setTeam(List<UserDataShort> team) {
         long ret = 0;
         for (UserDataShort teamMember : team) {
-            if (setTeamMember(teamMember) == 1)
+            if (setTeamMember(teamMember) != -1)
                 ret++;
             else
                 return -1;
