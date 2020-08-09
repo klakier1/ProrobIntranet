@@ -59,7 +59,7 @@ public class DeleteTimesheetRowCall implements ApiCall {
 
             @Override
             public void onFailure(Call<StandardResponse> call, Throwable t) {
-                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.error_retrofit_msg)));
+                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.toast_error_retrofit_msg)));
             }
         });
     }

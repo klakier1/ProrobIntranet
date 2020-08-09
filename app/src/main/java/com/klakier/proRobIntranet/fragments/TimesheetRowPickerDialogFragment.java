@@ -35,8 +35,12 @@ import java.util.List;
 
 public class TimesheetRowPickerDialogFragment extends DialogFragment {
 
-    private DialogResultListener dialogResultListener;
+    /**
+     * if true, doesn't return result if there is no changes
+     */
+    private Boolean updating = false;
 
+    private DialogResultListener dialogResultListener;
     private TimesheetRow newTimesheetRow;
     private TimesheetRow oldTimesheetRow;
     private TextView textViewDate;
@@ -46,26 +50,23 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
     private TextView textViewStatutoryBreakValue;
     private Spinner spinnerProjectName;
     private EditText editTextComments;
-
     private DatePickerDialog datePickerDialog;
     private TimePickerDialog timePickerDialogFrom;
     private TimePickerDialog timePickerDialogTo;
     private TimePickerDialog timePickerDialogCustomerBreak;
     private TimePickerDialog timePickerDialogStatutoryBreak;
     private Calendar calendar;
-
     private List<String> projects;
-
 
     public TimesheetRowPickerDialogFragment() {
         calendar = Calendar.getInstance();
+
         Date today = Date.valueOf(calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DAY_OF_MONTH));
         Time timeFromDef = Time.valueOf("07:00:00");
         Time timeToDef = Time.valueOf("15:00:00");
         Time timeCustomerBreakDef = Time.valueOf("00:15:00");
         Time timeStatutoryBreakDef = Time.valueOf("00:15:00");
         newTimesheetRow = new TimesheetRow(0, 0, today, timeFromDef, timeToDef, timeCustomerBreakDef, timeStatutoryBreakDef, null, 0, 0, false, null, null, null);
-
 
     }
 
@@ -74,6 +75,19 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
         fragment.setValues(defVal);
         fragment.setDialogResultListener(listener);
         return fragment;
+    }
+
+    public Boolean getUpdating() {
+        return updating;
+    }
+
+    /**
+     * If is true, doesn't return result if detect no changes
+     *
+     * @param updating boolean
+     */
+    public void setUpdating(Boolean updating) {
+        this.updating = updating;
     }
 
     public void setValues(TimesheetRow defVal) {
@@ -102,7 +116,7 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (dialogResultListener != null) {
-                    if (!newTimesheetRow.equals(oldTimesheetRow)) { //if something is changed
+                    if (!newTimesheetRow.equals(oldTimesheetRow) || !updating) { //if something is changed
 
                         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                         if (newTimesheetRow.getCreatedAt() == null)    //set timestamp only if is null, that mean object is new
@@ -192,7 +206,20 @@ public class TimesheetRowPickerDialogFragment extends DialogFragment {
                 newTimesheetRow.setDate(date);
                 textViewDate.setText(date.toString());
             }
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)) {
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                // Hide day spinner
+                int day = getContext().getResources().getIdentifier("android:id/day", null, null);
+                if (day != 0) {
+                    View dayPicker = findViewById(day);
+                    if (dayPicker != null) {
+                        //dayPicker.setVisibility(View.GONE);
+                    }
+                }
+            }
+        };
 
         textViewDate.setOnClickListener(new View.OnClickListener() {
             @Override

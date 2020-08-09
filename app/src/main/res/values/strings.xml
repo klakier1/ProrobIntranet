@@ -23,7 +23,8 @@
     <string name="buttonLogIn">Zaloguj</string>
 
     <!-- toast -->
-    <string name="error_retrofit_msg">Serwer nie odpowiada, sprawdź połączenie internetowe i spróbuj ponownie</string>
+    <string name="toast_error_retrofit_msg">Serwer nie odpowiada, sprawdź połączenie internetowe i spróbuj ponownie</string>
+    <string name="toast_error_add_to_loc_db">Dodawanie wpisu zakończone niepowodzeniem</string>
 
     <!-- menu drawer -->
     <string name="menu_home">Strona główna</string>
@@ -49,6 +50,9 @@
     <string name="yes">Tak</string>
     <string name="no">Nie</string>
 
+    <!-- double tsr dialog -->
+    <string name="double_tsr_msg">Wpis w tym dniu już istnieje. Czy chcesz dodać kolejny?</string>
+
     <!-- timesheet item menu -->
     <string name="timesheet_item_action_remove">Usuń</string>
     <string name="timesheet_item_action_edit">Edycja</string>
@@ -69,5 +73,21 @@
     <string name="example_text_title">Tytuł, stanowisko itp</string>
     <string name="example_text_phone">0 800 666 666</string>
     <string name="example_text_email">blebleble@bleble.com</string>
+
+    <string-array name="spinner_filter_month">
+        <item>Styczeń</item>
+        <item>Luty</item>
+        <item>Marzec</item>
+        <item>Kwiecień</item>
+        <item>Maj</item>
+        <item>Czerwiec</item>
+        <item>Lipiec</item>
+        <item>Sierpień</item>
+        <item>Wrzesień</item>
+        <item>Październik</item>
+        <item>Listopad</item>
+        <item>Grudzień</item>
+    </string-array>
+
 
 </resources>

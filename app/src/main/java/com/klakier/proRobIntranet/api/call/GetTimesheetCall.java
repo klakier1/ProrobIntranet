@@ -54,7 +54,7 @@ public class GetTimesheetCall implements ApiCall {
 
             @Override
             public void onFailure(Call<TimesheetResponse> call, Throwable t) {
-                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.error_retrofit_msg)));
+                onResponseListener.onFailure(new StandardResponse(true, mContext.getString(R.string.toast_error_retrofit_msg)));
             }
         });
     }

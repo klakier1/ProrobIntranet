@@ -1,9 +1,12 @@
 package com.klakier.proRobIntranet.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
@@ -31,6 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapter.OnTimeSheetItemListener {
+
+    public static final String DEF_VAL_TSR = "defValTsr";
 
     private final List<TimesheetRow> mListTsr = new ArrayList<TimesheetRow>();
     private Context mContext;
@@ -114,8 +119,13 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
         //return inflater.inflate(R.layout.fragment_working_time, container, false);
         View view = inflater.inflate(R.layout.fragment_working_time, container, false);
 
-        mListTsr.addAll(new DBProRob(mContext, null).readTimesheetWithoutMarkedForDelete());
-        mTimeSheetViewAdapter = new TimeSheetViewAdapter(mListTsr, this);
+        mListTsr.addAll(new DBProRob(mContext, null).readTimesheetWithoutMarkedForDelete(
+//                Date.valueOf("2020-02-01"),
+//                Date.valueOf("2020-02-10"),
+//                "Z46 Webasto Schierling"
+                )
+        );
+        mTimeSheetViewAdapter = new TimeSheetViewAdapter(getContext(), mListTsr, this);
         mRecyclerView = view.findViewById(R.id.recyclerViewTimesheet);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
         mRecyclerView.setAdapter(mTimeSheetViewAdapter);
@@ -126,19 +136,48 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
             public void onClick(View view) {
 
                 TimesheetRowPickerDialogFragment dialog = new TimesheetRowPickerDialogFragment();
+                dialog.setUpdating(false);
                 dialog.setDialogResultListener(new TimesheetRowPickerDialogFragment.DialogResultListener() {
                     @Override
-                    public void onDialogResult(TimesheetRow timesheetRow) {
-                        long id = new DBProRob(mContext, null).writeTimesheet(timesheetRow);
-                        if (id != -1) {
-                            //if added to local DB without error, add also to adapter and notify
-                            //set ID local if added to localDB
-                            timesheetRow.setIdLocal((int) id);
-                            mListTsr.add(timesheetRow);
-                            mTimeSheetViewAdapter.notifyItemInserted(mListTsr.size());
+                    public void onDialogResult(final TimesheetRow timesheetRow) {
+                        //check if tsr with that date exist in db
+                        int count = new DBProRob(mContext, null).readTimesheet(timesheetRow.getDate()).size();
+                        if (count != 0) {
+                            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    switch (which) {
+                                        case DialogInterface.BUTTON_POSITIVE:
+                                            //Yes button clicked
+                                            addTsrToLocalDB(timesheetRow);
+                                            break;
+
+                                        case DialogInterface.BUTTON_NEGATIVE:
+                                            break;
+                                    }
+                                }
+                            };
+
+                            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                            builder.setMessage(mContext.getString(R.string.double_tsr_msg))
+                                    .setPositiveButton(mContext.getString(R.string.yes), dialogClickListener)
+                                    .setNegativeButton(mContext.getString(R.string.no), dialogClickListener)
+                                    .show();
+                        } else {
+                            addTsrToLocalDB(timesheetRow);
                         }
+
                     }
                 });
+                //set default values
+                SharedPreferences sharedPref = mContext.getSharedPreferences("PROROB", Context.MODE_PRIVATE);
+                long id = sharedPref.getLong(DEF_VAL_TSR, 0);
+                if (id != 0) {
+                    List<TimesheetRow> listDefVal = new DBProRob(mContext, null).readTimesheet(id, false);
+                    if (listDefVal.size() == 1)
+                        dialog.setValues(listDefVal.get(0));
+                }
+                //show dialog
                 dialog.show(getFragmentManager(), "ADD");
             }
         });
@@ -172,7 +211,7 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
     }
 
     @Override
-    public void onTimeSheetItemClick(final int position, View v) {
+    public void onTimeSheetItemClick(final int adapterPosition, final int contentPosition, View v) {
         PopupMenu popupMenu = new PopupMenu(getContext(), v);
         popupMenu.inflate(R.menu.menu_timesheet_item);
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -181,7 +220,7 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                 int id = menuItem.getItemId();
                 switch (id) {
                     case R.id.timesheet_item_action_remove: {
-                        int idToRemove = mListTsr.get(position).getIdLocal();
+                        int idToRemove = mListTsr.get(contentPosition).getIdLocal();
                         DBProRob dbProRob = new DBProRob(mContext, null);
 
                         TimesheetRow timesheetRow = Stream.of(dbProRob.readTimesheet(idToRemove, false)).findFirst().get();
@@ -191,39 +230,40 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                             int deleteSize = dbProRob.deleteTimesheetRow(idToRemove);
                             if (deleteSize == 1) //if number of deleted row equals 1, delete from adapter and notify
                             {
-                                mListTsr.remove(position);
-                                mTimeSheetViewAdapter.notifyItemRemoved(position);
+                                mListTsr.remove(contentPosition);
+                                mTimeSheetViewAdapter.notifyItemRemoved(adapterPosition);
                             }
                         } else if (extId > 0) {
                             timesheetRow.setIdExternal(extId * (-1));
                             int updateSize = dbProRob.updateTimesheetRow(timesheetRow);
                             if (updateSize == 1) //if number of updated row equals 1, delete from adapter and notify
                             {
-                                mListTsr.remove(position);
-                                mTimeSheetViewAdapter.notifyItemRemoved(position);
+                                mListTsr.remove(contentPosition);
+                                mTimeSheetViewAdapter.notifyItemRemoved(adapterPosition);
                             }
                         }
                         break;
                     }
                     case R.id.timesheet_item_action_edit: {
                         TimesheetRowPickerDialogFragment dialog = new TimesheetRowPickerDialogFragment();
-                        try {
-                            dialog.setValues((TimesheetRow) mListTsr.get(position).clone());
-                            int idUpdate = mListTsr.get(position).getIdLocal();
-                            dialog.setValues(new DBProRob(mContext, null).readTimesheet(idUpdate, false).get(0));
-                        } catch (CloneNotSupportedException e) {
-                            e.printStackTrace();
-                        }
+                        dialog.setUpdating(true);
                         dialog.setDialogResultListener(new TimesheetRowPickerDialogFragment.DialogResultListener() {
                             @Override
                             public void onDialogResult(TimesheetRow timesheetRow) {
                                 int updated = new DBProRob(mContext, null).updateTimesheetRow(timesheetRow);
                                 if (updated == 1) {
-                                    mListTsr.set(position, timesheetRow);
-                                    mTimeSheetViewAdapter.notifyItemChanged(position);
+                                    mListTsr.set(contentPosition, timesheetRow);
+                                    mTimeSheetViewAdapter.notifyItemChanged(adapterPosition);
                                 }
                             }
                         });
+                        try {
+                            dialog.setValues((TimesheetRow) mListTsr.get(contentPosition).clone());
+                            int idUpdate = mListTsr.get(contentPosition).getIdLocal();
+                            dialog.setValues(new DBProRob(mContext, null).readTimesheet(idUpdate, false).get(0));
+                        } catch (CloneNotSupportedException e) {
+                            e.printStackTrace();
+                        }
                         dialog.show(getFragmentManager(), "UPDATE");
                         break;
                     }
@@ -235,5 +275,26 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
             }
         });
         popupMenu.show();
+    }
+
+    public boolean addTsrToLocalDB(TimesheetRow timesheetRow) {
+        long id = new DBProRob(mContext, null).writeTimesheet(timesheetRow);
+        if (id != -1) {
+            //if added to local DB without error, add also to adapter and notify
+            //set ID local if added to localDB
+            timesheetRow.setIdLocal((int) id);
+            mListTsr.add(timesheetRow);
+            mTimeSheetViewAdapter.notifyItemInserted(mListTsr.size());
+
+            //add if to shared preferences, to make it default next time
+            SharedPreferences sharedPref = mContext.getSharedPreferences("PROROB", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putLong(DEF_VAL_TSR, id);
+            editor.apply();
+            return true;
+        } else {
+            Toast.makeText(mContext, mContext.getString(R.string.toast_error_add_to_loc_db), Toast.LENGTH_SHORT).show();
+            return false;
+        }
     }
 }

@@ -256,7 +256,9 @@ public class DBProRob extends SQLiteOpenHelper {
 
     public List<TimesheetRow> readTimesheet() {
         SQLiteDatabase db = getReadableDatabase();
-        String query = "SELECT * FROM " + TABLE_TIMESHEET + " WHERE " + COL_ID_USER + "=" + new Token(mContext).getId();
+        String query = "SELECT * FROM " + TABLE_TIMESHEET
+                + " WHERE " + COL_ID_USER + "=" + new Token(mContext).getId()
+                + " ORDER BY " + COL_DATE;
 
         Cursor c = db.rawQuery(query, null);
         List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
@@ -273,9 +275,10 @@ public class DBProRob extends SQLiteOpenHelper {
 
     public List<TimesheetRow> readTimesheetWithoutMarkedForDelete() {
         SQLiteDatabase db = getReadableDatabase();
-        String query = "SELECT * FROM " + TABLE_TIMESHEET + " WHERE "
-                + COL_ID_USER + "=" + new Token(mContext).getId() + " AND "
-                + COL_ID_EXTERNAL + ">=" + 0;
+        String query = "SELECT * FROM " + TABLE_TIMESHEET
+                + " WHERE " + COL_ID_USER + "=" + new Token(mContext).getId()
+                + " AND " + COL_ID_EXTERNAL + ">=" + 0
+                + " ORDER BY " + COL_DATE;
 
         Cursor c = db.rawQuery(query, null);
         List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
@@ -290,12 +293,59 @@ public class DBProRob extends SQLiteOpenHelper {
         return ltsr;
     }
 
-    public List<TimesheetRow> readTimesheet(int id, boolean idExternal) {
+    public List<TimesheetRow> readTimesheetWithoutMarkedForDelete(Date from, Date to, String projectName) {
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_TIMESHEET
+                + " WHERE " + COL_ID_USER + "=" + new Token(mContext).getId()
+                + " AND " + COL_ID_EXTERNAL + ">=" + 0;
+
+        if (from != null && to != null)
+            query += " AND " + COL_DATE + ">=" + "'" + from.toString() + "'"
+                    + " AND " + COL_DATE + "<=" + "'" + to.toString() + "'";
+
+        if (projectName != null)
+            query += " AND " + COL_PROJECT + "=" + "'" + projectName + "'";
+
+        query += " ORDER BY " + COL_DATE;
+
+        Cursor c = db.rawQuery(query, null);
+        List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
+
+        while (c.moveToNext()) {
+            ltsr.add(getTimesheetRowFromCursor(c));
+        }
+
+        db.close();
+        c.close();
+
+        return ltsr;
+    }
+
+    public List<TimesheetRow> readTimesheet(long id, boolean idExternal) {
         SQLiteDatabase db = getReadableDatabase();
         String columnId = idExternal ? COL_ID_EXTERNAL : COL_ID_LOCAL;
         String query = "SELECT * FROM " + TABLE_TIMESHEET + " WHERE "
                 + COL_ID_USER + "=" + new Token(mContext).getId() + " AND "
                 + columnId + "=" + id;
+
+        Cursor c = db.rawQuery(query, null);
+        List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
+
+        while (c.moveToNext()) {
+            ltsr.add(getTimesheetRowFromCursor(c));
+        }
+
+        db.close();
+        c.close();
+
+        return ltsr;
+    }
+
+    public List<TimesheetRow> readTimesheet(Date date) {
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_TIMESHEET + " WHERE "
+                + COL_ID_USER + "=" + new Token(mContext).getId() + " AND "
+                + COL_DATE + "=" + "\"" + date.toString() + "\"";
 
         Cursor c = db.rawQuery(query, null);
         List<TimesheetRow> ltsr = new ArrayList<TimesheetRow>();
