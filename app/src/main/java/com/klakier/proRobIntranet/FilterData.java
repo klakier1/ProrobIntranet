@@ -1,5 +1,7 @@
 package com.klakier.proRobIntranet;
 
+import android.support.annotation.Nullable;
+
 import java.sql.Date;
 import java.util.Calendar;
 
@@ -29,6 +31,20 @@ public class FilterData {
         mSelected = RANGE_MONTH;
     }
 
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (obj == null) return false;
+        if (obj instanceof FilterData) {
+            if (mSelected != ((FilterData) obj).mSelected) return false;
+            if (!mRangeDateTo.equals(((FilterData) obj).mRangeDateTo)) return false;
+            if (!mRangeDateFrom.equals(((FilterData) obj).mRangeDateFrom)) return false;
+            if (!mRangeMonth.equals(((FilterData) obj).mRangeMonth)) return false;
+            return mRangeWeek.equals(((FilterData) obj).mRangeWeek);
+        } else {
+            return false;
+        }
+    }
+
     public void setRangeDateToDate(Date from, Date to) {
         mRangeDateFrom = from;
         mRangeDateTo = to;
@@ -40,7 +56,7 @@ public class FilterData {
         mRangeMonth.setTime(calendar.getTimeInMillis());
     }
 
-    public void setRangeWeek(int week, int year){
+    public void setRangeWeek(int week, int year) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, year);
         calendar.set(Calendar.WEEK_OF_YEAR, week);

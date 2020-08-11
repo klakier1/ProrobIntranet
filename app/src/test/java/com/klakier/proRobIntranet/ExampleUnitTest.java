@@ -1,11 +1,14 @@
 package com.klakier.proRobIntranet;
 
+import com.google.gson.Gson;
+
 import org.junit.Test;
 
 import java.sql.Date;
 import java.util.Calendar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Example local unit test, which will enqueue on the development machine (host).
@@ -34,5 +37,12 @@ public class ExampleUnitTest {
         fd.setRangeTypeSelected(FilterData.RANGE_DATE_TO_DATE);
         Date d5 = fd.getRangeStartDate();
         Date d6 = fd.getRangeEndDate();
+
+        Gson gson = new Gson();
+        String fdJson = gson.toJson(fd, FilterData.class);
+
+        FilterData newFd = gson.fromJson(fdJson, FilterData.class);
+
+        assertTrue(newFd.equals(fd));
     }
 }
