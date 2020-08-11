@@ -3,6 +3,7 @@ package com.klakier.proRobIntranet;
 import org.junit.Test;
 
 import java.sql.Date;
+import java.util.Calendar;
 
 import static org.junit.Assert.assertEquals;
 
@@ -20,7 +21,9 @@ public class ExampleUnitTest {
     @Test
     public void filterDate_isWorkCorrect() {
         FilterData fd = new FilterData(Date.valueOf("2021-02-09"));
-        fd.setRangeTypeSelected(FilterData.RANGE_MONTH);
+        fd.setRangeWeek(53,2020);
+        fd.setRangeDateToDate(Date.valueOf("2010-04-05"), Date.valueOf("2031-05-12"));
+        fd.setRangeMonth(Calendar.APRIL,2021);
         Date d1 = fd.getRangeStartDate();
         Date d2 = fd.getRangeEndDate();
 

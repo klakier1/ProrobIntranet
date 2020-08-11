@@ -29,6 +29,24 @@ public class FilterData {
         mSelected = RANGE_MONTH;
     }
 
+    public void setRangeDateToDate(Date from, Date to) {
+        mRangeDateFrom = from;
+        mRangeDateTo = to;
+    }
+
+    public void setRangeMonth(int month, int year) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, month, 1);
+        mRangeMonth.setTime(calendar.getTimeInMillis());
+    }
+
+    public void setRangeWeek(int week, int year){
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.WEEK_OF_YEAR, week);
+        mRangeWeek.setTime(calendar.getTimeInMillis());
+    }
+
     public int getRangeTypeSelected() {
         return mSelected;
     }
