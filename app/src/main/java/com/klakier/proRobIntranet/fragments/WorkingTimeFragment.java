@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.annimon.stream.Stream;
+import com.klakier.proRobIntranet.FilterDate;
 import com.klakier.proRobIntranet.R;
 import com.klakier.proRobIntranet.TimeSheetViewAdapter;
 import com.klakier.proRobIntranet.Token;
@@ -43,10 +44,12 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
     private TimeSheetViewAdapter mTimeSheetViewAdapter;
     private OnFragmentInteractionListener mListener;
     private FloatingActionButton mFab;
+    private FilterDate mFilterDate;
 
     public WorkingTimeFragment() {
         // Required empty public constructor
         setHasOptionsMenu(true);
+        mFilterDate = new FilterDate();
     }
 
     @Override
@@ -113,6 +116,11 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -126,6 +134,22 @@ public class WorkingTimeFragment extends Fragment implements TimeSheetViewAdapte
                 )
         );
         mTimeSheetViewAdapter = new TimeSheetViewAdapter(getContext(), mListTsr, this);
+        mTimeSheetViewAdapter.setFilterDate(mFilterDate, new TimeSheetViewAdapter.OnFilterDateChangedListener() {
+            @Override
+            public void onFilterDateChange() {
+                if (mTimeSheetViewAdapter != null) {
+                    mListTsr.clear();
+                    mListTsr
+                            .addAll(new DBProRob(mContext, null)
+                                    .readTimesheetWithoutMarkedForDelete(
+                                            mFilterDate.getRangeStartDate(),
+                                            mFilterDate.getRangeEndDate(),
+                                            null));
+                    mTimeSheetViewAdapter.notifyDataSetChanged();
+                    mFab.show();
+                }
+            }
+        });
         mRecyclerView = view.findViewById(R.id.recyclerViewTimesheet);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
         mRecyclerView.setAdapter(mTimeSheetViewAdapter);

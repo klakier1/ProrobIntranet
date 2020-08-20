@@ -1,17 +1,19 @@
 package com.klakier.proRobIntranet;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -29,13 +31,20 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<RecyclerView.View
     private boolean mFilterEnable = true;
     private List<TimesheetRow> mList;
     private OnTimeSheetItemListener mOnTimeSheetItemListener;
+    private OnFilterDateChangedListener mOnFilterDateChangedListener;
     private WeakReference<Context> mContextRef;
+    private FilterDate mFilterDate;
 
     public TimeSheetViewAdapter(Context context, List<TimesheetRow> list, OnTimeSheetItemListener onTimeSheetItemListener) {
         mContextRef = new WeakReference<>(context);
         mList = list;
         mOnTimeSheetItemListener = onTimeSheetItemListener;
+    }
 
+    public void setFilterDate(FilterDate fd, OnFilterDateChangedListener listener) {
+        mFilterEnable = true;
+        mFilterDate = fd;
+        mOnFilterDateChangedListener = listener;
     }
 
     @NonNull
@@ -78,15 +87,28 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<RecyclerView.View
             case TYPE_FILTER: {
                 FilterItemViewHolder filterItemViewHolder = (FilterItemViewHolder) holder;
 
+                filterItemViewHolder.spinnerAdapterProject.clear();
                 filterItemViewHolder.spinnerAdapterProject.add("Wszystkie");
                 filterItemViewHolder.spinnerAdapterProject.addAll(new DBProRob(mContextRef.get(), null).readObjectives());
                 filterItemViewHolder.spinnerAdapterProject.notifyDataSetChanged();
 
+                filterItemViewHolder.spinnerAdapterMonth.clear();
                 filterItemViewHolder.spinnerAdapterMonth.addAll(mContextRef.get().getResources().getStringArray(R.array.spinner_filter_month));
                 filterItemViewHolder.spinnerAdapterMonth.notifyDataSetChanged();
 
+                filterItemViewHolder.spinnerAdapterYear.clear();
                 filterItemViewHolder.spinnerAdapterYear.addAll(Util.generateStringIntRange(2019, 2100));
                 filterItemViewHolder.spinnerAdapterYear.notifyDataSetChanged();
+
+                //FilterDate fd = new FilterDate();
+                //fd.setRangeMonth(5, 2037);
+                int month = mFilterDate.getMonthOfRangeMonth();
+                int year = mFilterDate.getYearOfRangeMonth();
+
+                int selectedYearPosition = filterItemViewHolder.spinnerAdapterYear.getPosition(String.valueOf(year));
+
+                filterItemViewHolder.spinnerMonth.setSelection(month);
+                filterItemViewHolder.spinnerYear.setSelection(selectedYearPosition);
                 break;
             }
         }
@@ -107,6 +129,10 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<RecyclerView.View
 
     public interface OnTimeSheetItemListener {
         void onTimeSheetItemClick(int adapterPosition, int contentPosition, View v);
+    }
+
+    public interface OnFilterDateChangedListener {
+        void onFilterDateChange();
     }
 
     public class TimeSheetRowViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -152,8 +178,7 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<RecyclerView.View
         }
     }
 
-
-    public class FilterItemViewHolder extends RecyclerView.ViewHolder {
+    public class FilterItemViewHolder extends RecyclerView.ViewHolder implements AdapterView.OnItemSelectedListener, View.OnClickListener {
 
         Spinner spinnerMonth;
         Spinner spinnerYear;
@@ -161,22 +186,62 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<RecyclerView.View
         ArrayAdapter<String> spinnerAdapterMonth;
         ArrayAdapter<String> spinnerAdapterYear;
         ArrayAdapter<String> spinnerAdapterProject;
+        Button buttonFilterStart;
 
         public FilterItemViewHolder(@NonNull View itemView) {
             super(itemView);
             spinnerMonth = itemView.findViewById(R.id.spinner_filter_month);
             spinnerYear = itemView.findViewById(R.id.spinner_filter_year);
             spinnerProject = itemView.findViewById(R.id.spinner_filter_project_name);
+            buttonFilterStart = itemView.findViewById(R.id.button_filter_timesheet);
+
             spinnerAdapterMonth = new ArrayAdapterWithTextAlignment<String>(mContextRef.get(), android.R.layout.simple_spinner_item);
             spinnerAdapterMonth.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinnerAdapterYear = new ArrayAdapterWithTextAlignment<String>(mContextRef.get(), android.R.layout.simple_spinner_item);
             spinnerAdapterYear.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinnerAdapterProject = new ArrayAdapterWithTextAlignment<String>(mContextRef.get(), android.R.layout.simple_spinner_item);
             spinnerAdapterProject.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
             spinnerProject.setAdapter(spinnerAdapterProject);
             spinnerYear.setAdapter(spinnerAdapterYear);
             spinnerMonth.setAdapter(spinnerAdapterMonth);
 
+            spinnerYear.setOnItemSelectedListener(this);
+            spinnerMonth.setOnItemSelectedListener(this);
+            spinnerProject.setOnItemSelectedListener(this);
+
+            buttonFilterStart.setOnClickListener(this);
+        }
+
+        @Override
+        public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long id) {
+            switch (adapterView.getId()) {
+                case R.id.spinner_filter_month: {
+                    int month = pos;
+                    mFilterDate.setRangeMonth(month, -1);
+                    break;
+                }
+                case R.id.spinner_filter_year: {
+                    String sYear = spinnerAdapterYear.getItem(pos);
+                    int year = Integer.parseInt(sYear);
+                    mFilterDate.setRangeMonth(-1, year);
+                    break;
+
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> adapterView) {
+
+        }
+
+        @Override
+        public void onClick(View view) {
+            mOnFilterDateChangedListener.onFilterDateChange();
         }
     }
 
@@ -211,7 +276,9 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<RecyclerView.View
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 textView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_END);
             }
-            textView.setTextColor(Color.GREEN);
+            //textView.setTextColor(Color.GREEN);
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+
             return textView;
         }
 
@@ -225,10 +292,18 @@ public class TimeSheetViewAdapter extends RecyclerView.Adapter<RecyclerView.View
             params.gravity = Gravity.END;
             textView.setLayoutParams(params);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                textView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_END);
+                textView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_END);
                 textView.setGravity(Gravity.END);
+
             }
-            textView.setTextColor(Color.BLUE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                textView.setForegroundGravity(Gravity.END);
+            }
+            //textView.setTextColor(Color.BLUE);
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+
+            ((Spinner) parent).setGravity(Gravity.END);
+
             return textView;
         }
     }

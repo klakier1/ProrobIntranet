@@ -28,100 +28,100 @@ import java.util.List;
 
 public class TeamFragment extends Fragment {
 
-    private Context mContext;
+  private Context mContext;
 
-    private OnFragmentInteractionListener mListener;
-    private RecyclerView mRecyclerView;
-    private TeamViewAdapter mTeamViewAdapter;
-    private List<UserDataShort> mTeamList = new ArrayList<>();
+  private OnFragmentInteractionListener mListener;
+  private RecyclerView mRecyclerView;
+  private TeamViewAdapter mTeamViewAdapter;
+  private List<UserDataShort> mTeamList = new ArrayList<>();
 
-    public TeamFragment() {
-        // Required empty public constructor
-        setHasOptionsMenu(true);
-    }
+  public TeamFragment() {
+    // Required empty public constructor
+    setHasOptionsMenu(true);
+  }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_get_team:{
-                new GetAllUsersShortDataCall(mContext, new Token(mContext)).enqueue(new OnResponseListener() {
-                    @Override
-                    public void onSuccess(StandardResponse response) {
-                        UserDataShortResponse teamResponse = (UserDataShortResponse) response;
-                        if (teamResponse.getDataLength() > 0) {
-                            DBProRob dbProRob = new DBProRob(mContext, null);
-                            long i = dbProRob.clearTeam();
-                            dbProRob.setTeam(teamResponse.getData());
-                        }
-                        refreshList();
-                    }
-
-                    @Override
-                    public void onFailure(StandardResponse response) {
-                        Toast.makeText(mContext, response.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-                return true;
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case R.id.action_get_team:{
+        new GetAllUsersShortDataCall(mContext, new Token(mContext)).enqueue(new OnResponseListener() {
+          @Override
+          public void onSuccess(StandardResponse response) {
+            UserDataShortResponse teamResponse = (UserDataShortResponse) response;
+            if (teamResponse.getDataLength() > 0) {
+              DBProRob dbProRob = new DBProRob(mContext, null);
+              long i = dbProRob.clearTeam();
+              dbProRob.setTeam(teamResponse.getData());
             }
-            default:{
-                return false;
-            }
-        }
-    }
+            refreshList();
+          }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        inflater.inflate(R.menu.menu_working_team_fragment, menu);
+          @Override
+          public void onFailure(StandardResponse response) {
+            Toast.makeText(mContext, response.getMessage(), Toast.LENGTH_LONG).show();
+          }
+        });
+        return true;
+      }
+      default:{
+        return false;
+      }
     }
+  }
 
-    public void refreshList() {
-        if (mTeamViewAdapter != null) {
-            mTeamList.clear();
-            List<UserDataShort> team = new DBProRob(mContext, null).getTeam();
-            if (team != null) {
-                mTeamList.addAll(team);
-                mTeamViewAdapter.notifyDataSetChanged();
-            }
-        }
+  @Override
+  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    // Inflate the menu; this adds items to the action bar if it is present.
+    inflater.inflate(R.menu.menu_working_team_fragment, menu);
+  }
+
+  public void refreshList() {
+    if (mTeamViewAdapter != null) {
+      mTeamList.clear();
+      List<UserDataShort> team = new DBProRob(mContext, null).getTeam();
+      if (team != null) {
+        mTeamList.addAll(team);
+        mTeamViewAdapter.notifyDataSetChanged();
+      }
     }
+  }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+  @Override
+  public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                           Bundle savedInstanceState) {
 
-        // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_team, container, false);
-        mTeamViewAdapter = new TeamViewAdapter(mTeamList);
-        mRecyclerView = view.findViewById(R.id.recyclerViewTeam);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
-        mRecyclerView.setAdapter(mTeamViewAdapter);
-        refreshList();
-        return view;
+    // Inflate the layout for this fragment
+    View view = inflater.inflate(R.layout.fragment_team, container, false);
+    mTeamViewAdapter = new TeamViewAdapter(mTeamList);
+    mRecyclerView = view.findViewById(R.id.recyclerViewTeam);
+    mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
+    mRecyclerView.setAdapter(mTeamViewAdapter);
+    refreshList();
+    return view;
+  }
+
+  public void onAction(String action) {
+    if (mListener != null) {
+      mListener.onFragmentInteraction(action);
     }
+  }
 
-    public void onAction(String action) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(action);
-        }
+  @Override
+  public void onAttach(Context context) {
+    super.onAttach(context);
+    this.mContext = context;
+    if (context instanceof OnFragmentInteractionListener) {
+      mListener = (OnFragmentInteractionListener) context;
+    } else {
+      throw new RuntimeException(context.toString()
+              + " must implement OnFragmentInteractionListener");
     }
+  }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        this.mContext = context;
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-        this.mContext = null;
-    }
+  @Override
+  public void onDetach() {
+    super.onDetach();
+    mListener = null;
+    this.mContext = null;
+  }
 }
